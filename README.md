@@ -98,4 +98,4 @@ The comment supplies the approver identity that Linear's label mutation API does
 
 Edit the four `SKILL.md` files and the setup assets directly. Validate all skills and both plugin manifests before releasing. Bump both plugin versions together.
 
-The team-facing background material remains in [`whitepaper.md`](whitepaper.md), [`ai-first-delivery-whitepaper.pdf`](ai-first-delivery-whitepaper.pdf), and [`assets_ai_first/`](assets_ai_first/). The [tracker enforcement specification](assets_ai_first/plugin-workflow-spec.md) defines a tracker-neutral rule engine and adapter contract.
+The team-facing background material remains in [`whitepaper.md`](whitepaper.md) and [`assets_ai_first/`](assets_ai_first/). The [tracker enforcement specification](assets_ai_first/plugin-workflow-spec.md) defines a tracker-neutral rule engine and adapter contract.
