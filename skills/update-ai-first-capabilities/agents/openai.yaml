@@ -1,0 +1,6 @@
+interface:
+  display_name: "Update AI-First Capabilities"
+  short_description: "Review and approve classifier capabilities"
+  default_prompt: "Use $update-ai-first-capabilities to review and register a project capability safely."
+policy:
+  allow_implicit_invocation: false

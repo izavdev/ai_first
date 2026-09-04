@@ -1,0 +1,13 @@
+schema: ai-first-capability/v1
+id: skill:<stable-name>
+version: "1.0.0"
+kind: skill
+name: <human-readable name>
+description: <what this capability actually makes possible>
+covers: [<exact-task-class>]
+suggested_effects: {A: 1}
+documentation: [SKILL.md]
+requirements: [<condition required for the claim to hold>]
+limitations: [<known gap, permission, availability, or failure mode>]
+verification:
+  method: <how a reviewer checks the capability behaves as described>

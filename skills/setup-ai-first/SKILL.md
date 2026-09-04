@@ -1,0 +1,116 @@
+---
+name: setup-ai-first
+description: Configure AI-first delivery for Azure DevOps, GitHub Issues, or Linear by installing the shared schema, capability manifest, and active tracker adapter. Run once before groom or decompose-and-classify.
+---
+
+# Set up AI-first delivery
+
+Configure the current project for the `groom` and `decompose-and-classify` skills. This is an interactive setup skill. Inspect first, recommend choices when the repository provides evidence, confirm with the user, then write.
+
+## 1. Inspect
+
+Check for:
+
+- an existing `.ai-first/` directory;
+- tracker references in `AGENTS.md`, `CLAUDE.md`, repository docs, remotes, and environment configuration;
+- available Azure DevOps, GitHub, or Linear tools;
+- existing work item types and hierarchy language in tracker configuration and project docs;
+- an existing capability manifest that the team may have customized.
+
+Do not infer a tracker solely from an installed tool when both are plausible.
+
+## 2. Choose the tracker
+
+Ask which tracker this project uses when inspection did not settle it. Supported choices are:
+
+- **Azure DevOps**: use [assets/adapters/ado.md](assets/adapters/ado.md).
+- **GitHub Issues**: use [assets/adapters/github.md](assets/adapters/github.md).
+- **Linear**: use [assets/adapters/linear.md](assets/adapters/linear.md).
+
+If the tracker is unsupported, stop after explaining that a tracker adapter must define vocabulary, item operations, labels, linked documents, comments, hierarchy, approval identity, description-block storage, and label bootstrap behavior.
+
+## 3. Choose work item terminology
+
+The workflow has three semantic sizes but does not prescribe their names:
+
+| Size role | Meaning | Common names |
+|---|---|---|
+| Large | Contains multiple independently groomed regular items; split before grooming | Epic, Initiative, Feature |
+| Regular | The main unit that `groom` turns into a brief and later decomposes | Issue, Story, User Story, PBI |
+| Small | One executable, classifiable outcome created by decomposition | Sub-issue, Sub-task, Task |
+
+Infer the team's existing terms from the tracker and repository when possible. Present all three together and ask the user to confirm or change them. Recommend `Epic / Issue / Sub-issue` when there is no established vocabulary, while explaining that `Story` and `Task` are equally valid choices.
+
+Record one singular display term for each role. The meanings above are fixed; only the words are configurable. Do not infer size from tracker type names alone after setup—always interpret the configured terms through their recorded roles.
+
+## 4. Preview the installation
+
+Show the proposed tracker and these project-local files:
+
+```text
+.ai-first/
+├── README.md
+├── ai-first-schema.md
+├── ai-first-capabilities.yml
+├── capabilities-guide.md
+├── terminology.md
+└── tracker.md
+```
+
+The source files shipped with this skill are:
+
+- [assets/ai-first-schema.md](assets/ai-first-schema.md)
+- [assets/ai-first-capabilities.yml](assets/ai-first-capabilities.yml)
+- [assets/capabilities-guide.md](assets/capabilities-guide.md)
+- the selected file under `assets/adapters/`
+
+If `.ai-first/` already exists, compare before overwriting. Preserve team changes to `ai-first-capabilities.yml` unless the user explicitly chooses to reset it. Never silently replace a customized schema or adapter; show the differences and ask how to reconcile them.
+
+## 5. Write
+
+Create the directory and copy the selected source content into the project-local paths above. Write `.ai-first/README.md` with:
+
+- `tracker: ado`, `tracker: github`, or `tracker: linear`;
+- the setup date;
+- a note that `tracker.md` is the active adapter;
+- a note that `terminology.md` defines the project's large, regular, and small item names;
+- a note that `groom` and `decompose-and-classify` read these files;
+- a note that the capability manifest is intentionally project-owned, must be
+  filled and approved by the user/team, and may be calibrated from telemetry;
+- a note that no score-changing capabilities are enabled by the shipped default;
+- a pointer to `capabilities-guide.md` and the `update-ai-first-capabilities` skill.
+
+Do not infer or pre-approve capabilities during setup. Copy the conservative empty
+manifest even when tools or skills are installed. After writing, offer to run
+`update-ai-first-capabilities` with the user for each capability they want the
+project to recognize.
+
+Write `.ai-first/terminology.md` in this form, substituting the confirmed terms:
+
+```markdown
+# Work item terminology
+
+- large: Epic
+- regular: Issue
+- small: Sub-issue
+
+The large item contains multiple independently groomed regular items. The regular item is the unit groomed into an approved brief. The small item is one executable outcome created and classified during decomposition.
+```
+
+Use real file copies, not symlinks. Plugin caches and cross-agent skill installers may not preserve symlinks.
+
+## 6. Tracker bootstrap
+
+Read the selected adapter's label-bootstrap section.
+
+- Azure DevOps needs no bootstrap.
+- GitHub needs the seven repository labels listed in its adapter.
+- Linear needs the seven workspace labels listed in its adapter.
+
+For either GitHub or Linear, label creation changes an external repository or workspace. Show the exact labels and get explicit approval immediately before creating them. Skip labels that already exist.
+
+Do not configure, install, or authenticate tracker integrations. If the required tracker tools are unavailable, finish the local setup and report the missing integration as the next step.
+
+## 7. Finish
+
+Report the active tracker, the three selected terms, and the files written. Tell the user that `groom` is ready. Call out Linear's two-part approval rule when Linear was selected, or GitHub's label-event approval check when GitHub was selected.

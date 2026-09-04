@@ -1,0 +1,6 @@
+interface:
+  display_name: "Decompose and classify"
+  short_description: "Create safe, tiered execution items"
+  default_prompt: "Use $decompose-and-classify on this approved brief."
+policy:
+  allow_implicit_invocation: false

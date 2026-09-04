@@ -1,0 +1,28 @@
+{
+  "name": "ai-first-delivery",
+  "version": "0.4.0",
+  "description": "Poka-yoke skills for grooming, approving, decomposing, and classifying AI-assisted delivery work with project-defined terminology.",
+  "author": {
+    "name": "Ivan Zavialov",
+    "url": "https://github.com/izavdev"
+  },
+  "homepage": "https://github.com/izavdev/ai_first",
+  "repository": "https://github.com/izavdev/ai_first",
+  "keywords": ["delivery", "grooming", "classification", "poka-yoke"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "AI-First Delivery",
+    "shortDescription": "Groom and classify work safely",
+    "longDescription": "A tracker-aware delivery workflow with approval gates, deterministic delegation tiers, verification contracts, and escalation rules.",
+    "developerName": "Ivan Zavialov",
+    "category": "Developer Tools",
+    "capabilities": ["Interactive", "Write"],
+    "websiteURL": "https://github.com/izavdev/ai_first",
+    "defaultPrompt": [
+      "Set up AI-first delivery for this repository.",
+      "Review and approve this project's AI-first capabilities.",
+      "Groom this request into an approval-ready brief.",
+      "Decompose and classify this approved brief."
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "ai-first-delivery",
+  "owner": {
+    "name": "Ivan Zavialov",
+    "url": "https://github.com/izavdev"
+  },
+  "description": "AI-first delivery skills as an installable Claude Code plugin.",
+  "plugins": [
+    {
+      "name": "ai-first-delivery",
+      "source": "./",
+      "description": "Grooming and task-classification workflow with approval and verification gates.",
+      "category": "development",
+      "keywords": ["delivery", "grooming", "classification", "poka-yoke"]
+    }
+  ]
+}

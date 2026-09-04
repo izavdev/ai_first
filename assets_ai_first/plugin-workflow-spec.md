@@ -1,0 +1,301 @@
+# Spec: AI-First Tracker Enforcement Service
+
+Status: draft v2 for review
+
+Depends on: [AI-first schema v1](../skills/setup-ai-first/assets/ai-first-schema.md), project-local `.ai-first/terminology.md`, and the active tracker adapter. The schema is normative; this spec does not redefine it.
+
+## 1. Purpose
+
+The enforcement service is the detection net of the AI-first workflow. Skills and the pull-request pipeline provide prevention; this service catches changes that bypass them—direct board edits, raw API calls, or agent sessions outside the workflow—and corrects violations before they propagate.
+
+The core rule engine is tracker-agnostic. Tracker-specific event transport, label semantics, history, hierarchy, comments, description storage, and conditional updates live behind an adapter.
+
+## 2. Goals and non-goals
+
+### Goals
+
+- Enforce the three invariants from schema section 5 on every configured tracker.
+- Validate description blocks on relevant item changes.
+- Provide the escalation backstop for failed verification cycles outside skill sessions.
+- Emit comparable telemetry across trackers.
+- Make a new tracker an adapter implementation, not a fork of the rules.
+
+### Non-goals
+
+- Replacing `groom` or `decompose-and-classify`. The service never plans, decomposes, or initially classifies work.
+- Requiring tracker process customization. The portable enforcement mechanism is conditional correction plus a machine-prefixed comment.
+- Enforcing untagged work. An item enters scope through AI-first labels or ancestry; the framework remains opt-in.
+- Hiding tracker limitations. An adapter must declare unsupported capabilities. A runtime check that should be attributable but cannot be verified never returns valid; if safe correction is unavailable, the service reports that it cannot claim enforcement for that rule.
+
+## 3. Terminology
+
+Core code uses semantic roles rather than tracker type names:
+
+- **large item**: container for multiple regular items;
+- **regular item**: groomed and approved parent brief;
+- **small item**: executable item created by decomposition.
+
+User-facing comments use the names from `.ai-first/terminology.md`. The stable schema value `kind: task` still represents a small item and is not localized.
+
+## 4. Architecture
+
+```text
+tracker webhook ─┐
+tracker poller  ─┼─> TrackerAdapter ─> WorkflowChange ─> ordered rules
+startup replay  ─┘                                      │
+                                                        v
+pipeline result ───────────────> VerificationResult   MutationPlan
+                                                        │
+                                                        v
+                                                  TrackerAdapter
+```
+
+The engine depends on the port in section 5, never on a tracker SDK. Webhooks and polling must normalize to the same `WorkflowChange`, so rules do not know how a change arrived.
+
+## 5. Tracker adapter contract
+
+Each adapter must provide the following behavior. Exact interfaces are language-specific; the semantics are not.
+
+### 5.1 Normalized models
+
+```text
+WorkflowChange
+  trackerKey
+  containerKey
+  itemKey
+  changeToken          opaque and stable for idempotency
+  occurredAt
+  actor                stable identity when available
+  origin               human | automation | enforcement-service | unknown
+  changed              state | labels | description | comment | links | other
+  current              ItemSnapshot
+  previous             ItemSnapshot when available
+
+ItemSnapshot
+  key
+  versionToken         opaque concurrency token
+  sizeRole             large | regular | small | unknown
+  stateCategory        proposed | active | resolved | removed | unknown
+  rawState
+  labels
+  description
+  creator
+  parentKey
+  links
+```
+
+Tracker display names are metadata only. Adapters resolve `sizeRole` from configured terminology, native type/hierarchy data, or both.
+
+### 5.2 Required operations
+
+An adapter must implement:
+
+1. Subscribe to item and comment changes where supported.
+2. Poll changes since an opaque checkpoint as a fallback and for startup recovery.
+3. Fetch the current snapshot and, when the tracker exposes it, the snapshot before a change.
+4. Resolve whether an item is descended from an in-scope parent.
+5. Decode the tracker representation of a description into human text plus a canonical schema block, and encode it back without corrupting tracker-specific Markdown.
+6. Resolve the current approval grant as `Valid(actor)`, `Missing`, `SelfApproved(actor)`, or `Unverifiable(reason)` using the mechanism documented by that tracker.
+7. Add and remove labels without losing unrelated labels, regardless of whether the tracker API is additive or full-set replacement.
+8. Apply field-level mutations conditionally against `versionToken`.
+9. Post or update a machine-prefixed comment.
+10. Produce a canonical item URL for comments and telemetry.
+
+### 5.3 Capability declaration
+
+At startup, an adapter reports whether it supports:
+
+- change subscription;
+- polling and durable checkpoints;
+- previous-value lookup;
+- attributable approval history;
+- conditional writes;
+- comment update or only comment creation;
+- native parent/child and dependency links.
+
+Missing subscription may fall back to polling. Missing comment update may fall back to a deduplicated new comment. Missing attributable approval history or conditional writes prevents enforce mode for the affected rule; the service must report the adapter as degraded rather than silently weakening an invariant. If a normally capable adapter cannot attribute one particular approval, that approval is `Unverifiable` and R3 removes it when safe conditional correction remains available.
+
+The Markdown adapters shipped with `setup-ai-first` describe agent tool usage. Enforcement adapters implement this contract in code. They must agree on label behavior, approval attribution, description encoding, hierarchy, and terminology mapping.
+
+## 6. Event ingestion and scope
+
+Primary ingestion uses the tracker's webhook, event stream, or service hook. Fallback ingestion polls on a configurable interval. Both produce `WorkflowChange` values.
+
+An item is in scope when any condition holds:
+
+- it carries `ai-first`, `groomed`, or `brief-approved`;
+- it carries a tier label;
+- it is a descendant of an in-scope item.
+
+Everything else is ignored without telemetry noise. If ancestry cannot be resolved during an event, queue a bounded retry and then record one adapter error; do not guess.
+
+Delivery is assumed to be at least once and potentially out of order. The engine must tolerate duplicates and re-fetch current state before enforcing a stale event.
+
+## 7. Rule engine
+
+Rules evaluate in order and return `Ok`, `Violation(MutationPlan, Comment, Data)`, or `Unverifiable(Reason)`. Rule evaluation is pure over normalized inputs; fetching and mutation happen outside the rule.
+
+### R3 — Approval integrity (invariant 1)
+
+Evaluate first when approval-related state changes or when an approved regular item is revalidated.
+
+Check: the item is currently approved and the adapter returns `Valid(actor)` where `actor` differs from the item's creator. Tracker-specific mechanisms may use attributable label history or a label-plus-comment protocol.
+
+Violation: remove `brief-approved` conditionally and post `[ai-first] REVERTED:` with the exact independent-approval step for the active tracker. `Unverifiable` fails closed in enforce mode and must never be treated as approval.
+
+### R1 — Tier presence on activation (invariant 2)
+
+Trigger: a small item enters the adapter's `active` state category.
+
+Check: exactly one tier label, a schema-valid task-kind block, and agreement between `tier:` and the label.
+
+Violation: restore only the state field to its previous value and post `[ai-first] REVERTED:` naming the failed check and the configured small-item term. If the previous value is unavailable, move to the adapter-configured safe pre-active state. If neither is possible, report the violation without claiming it was reverted.
+
+### R2 — Delegate verification presence (invariant 3, static half)
+
+Trigger: the canonical block or tier labels change and the resulting tier is Delegate.
+
+Check: `verify:` is present and non-empty.
+
+Violation: rewrite only the canonical block's tier to Pair, replace only the tier label, and post `[ai-first] SCHEMA: delegate without verify command; downgraded to pair per fixed-value rule.` The adapter must preserve unrelated labels and human-authored description text.
+
+### R4 — Schema validation (detection)
+
+Trigger: any description, label, or state edit on an in-scope item.
+
+Check: the adapter can decode the description; the canonical block parses per schema 2.3; required keys are present; tier-label cardinality and block agreement are valid where applicable.
+
+Violation: comment only with `[ai-first] SCHEMA:` and the failing rule. Do not revert arbitrary description edits. Debounce by item and violation fingerprint; update the prior comment when the adapter supports it.
+
+### R5 — Bounce backstop
+
+Trigger: a `VerificationResult` reports failure for a Delegate small item and its `bounce` value was not incremented within the configured grace period.
+
+Check: deduplicate by verification run key and compare accepted failure results with the block's current bounce value.
+
+Violation: increment `bounce` conditionally. At the threshold, rewrite the tier to Pair, replace the tier label, add `ai-escalated`, and post `[ai-first] ESCALATED:` with verification run links.
+
+## 8. Ordering, idempotency, and loop prevention
+
+- Evaluate R3 before downstream rules; invalid approval cannot open later gates.
+- Key processed rule outcomes by `(trackerKey, containerKey, itemKey, changeToken, ruleId)`.
+- Store verification-result idempotency separately by `(pipelineKey, runKey, itemKey)`.
+- Mark service-originated mutations with an origin token where supported. Otherwise identify them through the service actor plus a mutation correlation marker.
+- Short-circuit an exact service-originated mutation only after recording its idempotency key. Do not ignore every event authored by the service identity; unrelated administrative changes by that identity still require validation.
+- Reprocessing the same change must not create a second mutation or comment.
+
+## 9. Conditional correction mechanics
+
+“Revert” means restore only fields implicated by the violation, never roll back the whole item.
+
+Every mutation follows this sequence:
+
+1. Build a `MutationPlan` from the normalized current and previous snapshots.
+2. Re-fetch the item and compare its `versionToken` with the plan's expected token.
+3. If the token changed, discard the plan and re-evaluate the fresh snapshot.
+4. Ask the adapter to apply only the state, workflow labels, or canonical block fields named by the plan.
+5. Record the result and correlation token before acknowledging the source event.
+
+Adapters translate this into the tracker's optimistic-concurrency mechanism. An adapter without safe conditional writes may observe and comment but may not claim enforce capability.
+
+## 10. Pull-request pipeline integration
+
+The pipeline sends a tracker-independent event:
+
+```text
+VerificationResult
+  pipelineKey
+  runKey
+  itemReference
+  outcome              pass | fail | cancelled
+  runUrl
+  completedAt
+```
+
+Preferred transport is an authenticated service endpoint or queue. `itemReference` resolves through the active adapter and may be a canonical URL or `(trackerKey, containerKey, itemKey)` tuple.
+
+For installations that cannot call the service, an adapter may consume a structured tracker comment such as `[ai-first] VERIFY-RESULT: fail <run-url>`. Comment ingestion is a compatibility transport, not the core domain model. Authenticate or allow-list the posting identity so a human comment cannot forge a pipeline result.
+
+## 11. Telemetry
+
+Persist tracker-neutral identifiers and rule data:
+
+- classification events: tracker, container, item, task classes, tier, scores,
+  manifest version, capability sources, timestamp, actor origin;
+- tier changes: from, to, reason (`human-challenge`, `escalation`, `reclassify`);
+- bounces and verification outcomes by item and run;
+- violations, unverifiable checks, correction outcomes, and adapter errors by rule;
+- detection and correction latency.
+
+Derived metrics include Delegate accuracy, mean bounces per tier, human challenge rate and direction, rule-violation trend, and adapter degradation rate. Reports may group by tracker, but metric definitions must remain identical.
+
+Do not store display terms as semantic dimensions; store `large`, `regular`, and `small`, with the configured term as optional presentation metadata.
+
+## 12. Configuration
+
+Global defaults:
+
+- `bounceThreshold`: `2`;
+- `verificationGracePeriod`: tracker-independent duration;
+- `schemaCommentDebounce`: `1h`;
+- `pollInterval`: `60s`;
+- `enforcementMode`: `observe` or `enforce`, default `observe`.
+
+Per tracker/container:
+
+- adapter type and credentials reference;
+- webhook/event subscription settings;
+- polling checkpoint storage;
+- state-to-category mapping and safe pre-active state;
+- `.ai-first/terminology.md` values;
+- schema and label names if versioned aliases are introduced;
+- pipeline posting identities allowed to submit verification results.
+
+Observe mode evaluates and records every rule but never mutates tracker state. Run it for at least one normal delivery cycle before enabling enforce mode for a new adapter or container.
+
+## 13. Failure behavior and edge cases
+
+- Bulk edits: scope filtering and idempotency prevent duplicate comments on unaffected items.
+- Out-of-order events: re-fetch current state; never undo a newer valid edit from a stale event.
+- Concurrent edits: conditional mutation failure causes re-evaluation, not retrying the stale patch.
+- Item transfer between containers or trackers: treat as newly discovered and validate from current state.
+- Rapid approval/retraction: evaluate current approval plus the adapter's latest attributable grant.
+- Legacy items without blocks: comment once with schema remediation and honor debounce.
+- Service downtime: resume from each adapter's durable checkpoint and run a bounded catch-up sweep.
+- Tracker outage or rate limit: retry with backoff while preserving event order per item; expose lag telemetry.
+- Partial mutation failure: re-fetch, re-evaluate, and report the actual final state. Never post `REVERTED` unless correction succeeded.
+- Adapter degradation: stay in observe mode for rules whose required capability is unavailable and surface a prominent health error.
+
+## 14. Security and permissions
+
+- Use least-privilege credentials scoped to item read/write, history required for approval, relationships, and comments.
+- Keep credentials outside project configuration; configuration stores references only.
+- Authenticate pipeline results and tracker webhooks where the provider supports signatures or shared secrets.
+- Treat item descriptions and comments as untrusted input. Parse only the schema block and exact machine prefixes; never execute content from them.
+- Escape or parameterize all tracker queries and mutations.
+
+## 15. Phasing
+
+1. **Core**: normalized models, adapter contract, schema parser, scope filter, R4, idempotency, and observe mode.
+2. **First adapter**: event ingestion, polling recovery, approval resolution, conditional writes, R1 and R3; observe before enforce.
+3. **Static delegation safety**: R2 plus description encode/decode tests for the adapter.
+4. **Pipeline loop**: authenticated `VerificationResult`, R5, and escalation.
+5. **Additional trackers**: contract tests shared by every adapter, followed by an observe cycle per tracker.
+6. **Telemetry**: cross-tracker retro view and adapter-health reporting.
+
+Each phase is independently shippable. Skills and pipeline validation function without the enforcement service, so the service adds safety without becoming a prerequisite for starting the workflow.
+
+## 16. Adapter acceptance tests
+
+Every adapter must pass the same behavioral suite:
+
+1. Duplicate and out-of-order changes produce at most one correction.
+2. An invalid activation restores only state and preserves concurrent unrelated edits.
+3. Tier changes preserve unrelated labels, including on full-set-replacement APIs.
+4. Description round-tripping preserves human text and the tracker-specific block delimiter.
+5. Self-approval, missing approval history, and ambiguous approval all fail closed.
+6. A valid independent approval survives reprocessing.
+7. Service-originated corrections do not loop.
+8. Polling recovery produces the same rule outcomes as webhook delivery.
+9. A forged or duplicate pipeline result cannot increment `bounce`.
+10. User-facing comments use configured terminology while stored telemetry uses semantic roles.

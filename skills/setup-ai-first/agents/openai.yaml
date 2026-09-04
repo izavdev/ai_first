@@ -1,0 +1,6 @@
+interface:
+  display_name: "Set up AI-first delivery"
+  short_description: "Configure tracker and workflow contracts"
+  default_prompt: "Use $setup-ai-first to configure this repository."
+policy:
+  allow_implicit_invocation: false
