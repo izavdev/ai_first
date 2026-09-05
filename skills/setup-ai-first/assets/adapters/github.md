@@ -58,7 +58,7 @@ The current `brief-approved` label and its actor are verified from GitHub issue 
 1. Fetch the issue and confirm `brief-approved` is currently present. Record the creator from `author.login` (REST field: `user.login`).
 2. Fetch all issue events with `gh api --paginate repos/{owner}/{repo}/issues/{number}/events` or an equivalent GitHub tool.
 3. In chronological order, find events whose label name is `brief-approved` and whose event is `labeled` or `unlabeled`. The last matching event must be `labeled`.
-4. Its `actor.login` is the approver. It must be present, must differ from the issue creator, and must represent an identifiable user. If the event is missing or cannot be attributed, approval is invalid.
+4. Its `actor.login` is the approver. It must be present and represent an identifiable human user. Apply the schema's project approval policy: it must differ from the issue creator unless it matches the configured solo GitHub login. If the event is missing or cannot be attributed, approval is invalid.
 
 On failure, post `[ai-first] BLOCKED:` with the exact remediation and stop. Never infer the approver from comments, assignees, reviewers, or the current viewer.
 

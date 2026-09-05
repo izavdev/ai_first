@@ -42,7 +42,9 @@ hierarchy. The configured words do not alter this relationship.
 
 Via the ADO MCP's revisions API: fetch the work item's revision history, find the revision
 that added the `brief-approved` tag, and compare its author identity to the work item's
-creator. They MUST differ. If they match (or the revision cannot be found), treat
+creator. Apply the schema's project approval policy using canonical identity IDs:
+they must differ unless the human approver matches the configured solo identity.
+If this policy fails or the granting revision cannot be attributed, treat
 `brief-approved` as not validly granted and block per schema invariant 1.
 
 ## Label bootstrap

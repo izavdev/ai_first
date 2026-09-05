@@ -43,9 +43,33 @@ Infer the team's existing terms from the tracker and repository when possible. P
 
 Record one singular display term for each role. The meanings above are fixed; only the words are configurable. Do not infer size from tracker type names alone after setup—always interpret the configured terms through their recorded roles.
 
-## 4. Preview the installation
+## 4. Choose the approval policy
 
-Show the proposed tracker and these project-local files:
+Ask whether the project has another human available to review briefs or is maintained
+by a sole developer. Default to independent approval; never infer solo mode from
+contributor count, installed tools, or the current login alone. Present an existing
+policy on reruns and preserve it unless the user requests a change.
+
+For solo development, offer explicit self-approval for one named human tracker
+identity. Explain that the developer must still review and manually approve each
+brief, including Linear's approval comment; only the second-person requirement is
+waived. Confirm the choice and canonical identity (GitHub login, Azure DevOps
+identity ID, or Linear user ID). Resolve it with available tracker identity tools;
+never use a display name or guess. If tools are unavailable, finish local setup
+with `solo-mode: false`, report solo mode as pending identity verification, and
+explain how to rerun setup after connecting the tracker.
+
+Write the confirmed `solo-mode` value into the project-local schema's Project
+approval policy section: `false` for independent approval, or a quoted canonical
+identity for solo approval. Keep exactly one declaration. Do not change the
+shipped asset's default. On an existing installation, show and reconcile the
+schema and active adapter changes together so all consumers use the same rule.
+Removing solo mode restores independent approval; existing self-approvals must be
+rechecked under that policy before further decomposition.
+
+## 5. Preview the installation
+
+Show the proposed tracker, approval policy (and solo identity if selected), and these project-local files:
 
 ```text
 .ai-first/
@@ -66,12 +90,13 @@ The source files shipped with this skill are:
 
 If `.ai-first/` already exists, compare before overwriting. Preserve team changes to `ai-first-capabilities.yml` unless the user explicitly chooses to reset it. Never silently replace a customized schema or adapter; show the differences and ask how to reconcile them.
 
-## 5. Write
+## 6. Write
 
 Create the directory and copy the selected source content into the project-local paths above. Write `.ai-first/README.md` with:
 
 - `tracker: ado`, `tracker: github`, or `tracker: linear`;
 - the setup date;
+- the confirmed approval policy and a pointer to the schema as its source of truth;
 - a note that `tracker.md` is the active adapter;
 - a note that `terminology.md` defines the project's large, regular, and small item names;
 - a note that `groom` and `decompose-and-classify` read these files;
@@ -99,7 +124,7 @@ The large item contains multiple independently groomed regular items. The regula
 
 Use real file copies, not symlinks. Plugin caches and cross-agent skill installers may not preserve symlinks.
 
-## 6. Tracker bootstrap
+## 7. Tracker bootstrap
 
 Read the selected adapter's label-bootstrap section.
 
@@ -111,6 +136,6 @@ For either GitHub or Linear, label creation changes an external repository or wo
 
 Do not configure, install, or authenticate tracker integrations. If the required tracker tools are unavailable, finish the local setup and report the missing integration as the next step.
 
-## 7. Finish
+## 8. Finish
 
-Report the active tracker, the three selected terms, and the files written. Tell the user that `groom` is ready. Call out Linear's two-part approval rule when Linear was selected, or GitHub's label-event approval check when GitHub was selected.
+Report the active tracker, the three selected terms, approval policy and any pending identity verification, and the files written. Tell the user that `groom` is ready. Call out Linear's two-part approval rule when Linear was selected, or GitHub's label-event approval check when GitHub was selected.

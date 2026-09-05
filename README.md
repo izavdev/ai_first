@@ -1,6 +1,6 @@
 # AI-First Delivery Framework
 
-Poka-yoke skills for AI-assisted delivery: groom the request, require independent approval, decompose it into small execution items, and classify each item by verifiability and risk.
+Poka-yoke skills for AI-assisted delivery: groom the request, require human approval (independent by default, self-approval for configured solo developers), decompose it into small execution items, and classify each item by verifiability and risk.
 
 The repository is now a portable Agent Skills package. There is no generation step and no agent-specific copy to keep in sync.
 
@@ -12,7 +12,7 @@ npx skills@latest add izavdev/ai_first
 
 Select all four skills, then choose any of the supported clients offered by the installer, including GitHub Copilot, Claude Code, and Codex. The installer copies ordinary, editable skill files into the location expected by each selected client.
 
-Run `setup-ai-first` once in each target repository. It asks which tracker the project uses and what the team calls large, regular, and small work items. It then installs the shared schema, capability manifest and guide, terminology, and active adapter under `.ai-first/`. The capability manifest is project-owned and must be filled by the user or team; no score-changing capability is enabled by default. Use `update-ai-first-capabilities` to review tools, MCPs, resources, context retrieval, validators, skills, and agents before approving them. Use `groom` and `decompose-and-classify` afterward. Invoke them using the selected client's skill syntax: for example, `$setup-ai-first` in Codex or `/setup-ai-first` in Claude Code.
+Run `setup-ai-first` once in each target repository. It asks which tracker the project uses and what the team calls large, regular, and small work items, and whether briefs need independent approval or named solo self-approval. It then installs the shared schema, capability manifest and guide, terminology, and active adapter under `.ai-first/`. The capability manifest is project-owned and must be filled by the user or team; no score-changing capability is enabled by default. Use `update-ai-first-capabilities` to review tools, MCPs, resources, context retrieval, validators, skills, and agents before approving them. Use `groom` and `decompose-and-classify` afterward. Invoke them using the selected client's skill syntax: for example, `$setup-ai-first` in Codex or `/setup-ai-first` in Claude Code.
 
 Do not install the same skills both through `npx skills` and a native plugin in one client; duplicate commands and discovery entries are the likely result.
 
@@ -43,6 +43,8 @@ This repository also carries native manifests for clients that support managed p
 The manifests make the repository publishable to the corresponding marketplaces. Until it is listed in a marketplace, the `npx skills` route is the simplest installation path from GitHub.
 
 ## Included skills
+
+See the [skill how-to guides](docs/README.md) for prerequisites, example prompts, workflow steps, and troubleshooting for each skill.
 
 | Skill | Purpose |
 |---|---|
@@ -83,9 +85,18 @@ the configured project-local skill roots, but metadata is only a claim: it has n
 effect until a user adds an exact ID/version approval to the central project
 manifest. This prevents an installed skill from declaring itself proven.
 
+## Solo developers
+
+During `setup-ai-first`, select solo development and confirm your canonical tracker
+identity. Setup records `solo-mode: "<your-tracker-identity>"` in the project's
+`.ai-first/ai-first-schema.md`. You can then review and manually approve your own
+briefs. Approval labels, Linear's approval comment, and downstream checks still
+apply. Existing projects can rerun setup to reconcile their schema and adapter.
+See [working as a solo developer](docs/setup-ai-first.md#work-as-a-solo-developer).
+
 ## Tracker approval mechanisms
 
-On GitHub, `brief-approved` is attributed through the issue event history. The latest event for that label must be a `labeled` event whose actor differs from the issue creator.
+On GitHub, `brief-approved` is attributed through the issue event history. The latest event for that label must be a `labeled` event whose actor satisfies the project approval policy: independent by default, or the configured solo developer.
 
 Linear approval has two parts:
 

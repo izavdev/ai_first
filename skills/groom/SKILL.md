@@ -47,7 +47,7 @@ Track unresolved judgment calls as **open decisions**. Do not resolve them yours
 1. Write the brief into the item's description (or a linked document if the team convention is set), structured as: Destination / Constraints / Touched surfaces / Definition of done / Out of scope / Human-only list / Open decisions.
 2. Append the parent description block per schema section 2.1, with `open-decisions` set to the real count.
 3. Apply labels `ai-first` and `groomed`.
-4. NEVER apply `brief-approved`. Post a comment naming the suggested approver and stating that decomposition is blocked until someone other than the requester approves.
+4. NEVER apply `brief-approved`. Read the schema's project approval policy. In independent mode, post a comment naming the suggested independent approver. In solo mode, name the configured human and explain that they must review and manually self-approve the brief using the tracker's approval mechanism. In both modes, state that decomposition remains blocked until valid approval and zero open decisions; never auto-approve because solo mode is enabled.
 
 ## Stop conditions
 

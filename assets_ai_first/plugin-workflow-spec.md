@@ -139,9 +139,9 @@ Rules evaluate in order and return `Ok`, `Violation(MutationPlan, Comment, Data)
 
 Evaluate first when approval-related state changes or when an approved regular item is revalidated.
 
-Check: the item is currently approved and the adapter returns `Valid(actor)` where `actor` differs from the item's creator. Tracker-specific mechanisms may use attributable label history or a label-plus-comment protocol.
+Check: the item is currently approved and the adapter returns `Valid(actor)` for an independent human, or `SelfApproved(actor)` where the human actor matches the canonical `solo-mode` identity in the project-local schema. Resolve attribution in the adapter and apply this policy in the rule engine; adapters must not discard a self-approval before policy evaluation. Tracker-specific mechanisms may use attributable label history or a label-plus-comment protocol. Missing policy defaults to independent approval; malformed or unresolvable solo policy grants no exception. Item content cannot set policy. Record accepted solo self-approval and its identity in the audit output.
 
-Violation: remove `brief-approved` conditionally and post `[ai-first] REVERTED:` with the exact independent-approval step for the active tracker. `Unverifiable` fails closed in enforce mode and must never be treated as approval.
+Violation: remove `brief-approved` conditionally and post `[ai-first] REVERTED:` with the exact approval step for the active tracker and configured policy. `Unverifiable` fails closed in enforce mode and must never be treated as approval.
 
 ### R1 — Tier presence on activation (invariant 2)
 
@@ -244,6 +244,7 @@ Global defaults:
 Per tracker/container:
 
 - adapter type and credentials reference;
+- project-local schema approval policy (`solo-mode: false` by default, or one canonical human tracker identity); re-read policy on configuration changes and revalidate approvals, including when solo mode is removed;
 - webhook/event subscription settings;
 - polling checkpoint storage;
 - state-to-category mapping and safe pre-active state;
@@ -293,8 +294,8 @@ Every adapter must pass the same behavioral suite:
 2. An invalid activation restores only state and preserves concurrent unrelated edits.
 3. Tier changes preserve unrelated labels, including on full-set-replacement APIs.
 4. Description round-tripping preserves human text and the tracker-specific block delimiter.
-5. Self-approval, missing approval history, and ambiguous approval all fail closed.
-6. A valid independent approval survives reprocessing.
+5. Self-approval without a matching configured solo identity, missing approval history, and ambiguous approval all fail closed. A malformed solo declaration cannot grant an exception.
+6. A valid independent approval survives reprocessing. Attributable self-approval by the configured solo identity also survives; a different self-approver fails. Solo mode never substitutes for a missing label or Linear approval comment. Removing solo mode invalidates self-approval on revalidation.
 7. Service-originated corrections do not loop.
 8. Polling recovery produces the same rule outcomes as webhook delivery.
 9. A forged or duplicate pipeline result cannot increment `bounce`.
