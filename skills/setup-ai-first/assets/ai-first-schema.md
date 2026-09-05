@@ -80,8 +80,8 @@ verify: <single machine-runnable command, required when tier=delegate>
 classes: <comma-separated stable task-class slugs>
 scores: V2 B0 C2 A0
 profile: bulk-mechanical | deep-planning | triage    <execution profile, delegate/pair only>
-manifest: 2026.09                                    <capability manifest version used>
-capability-sources: ai-first-capabilities/v2@2026.09  <plus applied metadata id@version values>
+manifest: 2026.09.1                                    <capability manifest version used>
+capability-sources: ai-first-capabilities/v2@2026.09.1  <plus applied metadata id@version values>
 rationale: <one line, human-readable>
 bounce: 0
 context: <comma-separated links or IDs: ADRs, specs, related items>
@@ -122,7 +122,14 @@ Score each axis 0-2. Higher = more delegable.
 | **V** Verifiability | Success is a judgment call | Partially checkable (some tests, manual steps remain) | Fully machine-checkable with one command |
 | **B** Blast radius (inverted: 2 = small) | Auth, payments, data migration, public API contract, security config | Internal behavior with cross-team consumers | Isolated, reversible, behind tests or flags |
 | **C** Context locality | Requires knowledge outside repo/docs (heads, Slack, stakeholder preference) | Mostly in repo, minor external context that can be linked | Everything needed is in repo + linked docs |
-| **A** Ambiguity residue (inverted: 2 = none) | Open judgment calls remain after grooming | Minor naming/structure decisions | Mechanical transformation, no decisions |
+| **A** Ambiguity residue (inverted: 2 = none) | Open judgment calls remain after grooming | Bounded naming/structure choices within established conventions | Mechanical transformation, no decisions |
+
+A=1 permits local implementation choices only when the item links the applicable
+conventions or examples, identifies the allowed choices, and records stop conditions
+for exceeding them. Product behavior, architecture, public contracts, dependencies,
+and security policy must already be decided. If those decisions remain open, score
+A=0; do not relabel them as minor choices to enable delegation. A=2 remains fully
+mechanical work. Missing required context also prevents C=2.
 
 ### Capability adjustment (between scoring and derivation)
 
@@ -138,12 +145,44 @@ This ordering is deliberate. Raw-first scoring keeps the rubric stable as toolin
 
 ### Derivation (apply in order, first match wins)
 
-1. **Hard overrides to `human-only`**, regardless of scores: secrets/credentials handling, production data migration without rollback, legal/compliance text, anything on the parent brief's explicit human-only list.
-2. **B = 0 caps the tier at `pair`.** High blast radius never delegates, even fully verified.
-3. **V < 2 means the execution item CANNOT be `delegate`.** This is the fixed-value poka-yoke: if the classifier cannot produce a `verify` command, it must not emit `tier: delegate`. Absence of the command IS the classification signal. Downgrade to `pair` automatically and say so in `rationale`.
-4. **All four axes = 2** (V2 B2 C2 A2, after overrides) -> `delegate`.
-5. **Sum >= 5 with no zero** -> `pair`.
-6. **Any other combination** -> `human-only` for two or more zeros, otherwise `pair`.
+Use final, post-capability scores. Each score must be an integer from 0 through 2;
+invalid or missing scores are a schema violation, not a tier.
+
+1. **Hard override -> `human-only`**, regardless of scores or verification:
+   secrets/credentials handling, production data migration without rollback,
+   legal/compliance text, or anything on the parent brief's explicit human-only list.
+2. **Two or more zero scores -> `human-only`.** Count zeros across V, B, C, and A.
+3. **V=2, B=2, C=2, A>=1 AND a verification command exists -> `delegate`.**
+   The command must satisfy section 2.2: one machine-runnable command that checks
+   completion and returns a boolean exit status. Nonempty text alone is insufficient.
+4. **Otherwise -> `pair`.** When verification is the limiter, explain it in `rationale`.
+
+B = 0 and V < 2 are delegation restrictions, not early assignments to `pair`.
+They never weaken a `human-only` result from rules 1 or 2. Missing verification
+also cannot weaken a `human-only` result. If scores are V2 B2 C2 A1 or V2 B2 C2 A2 but the command
+is missing or unusable, rule 4 yields `pair`; record the inconsistency for repair.
+The previous sum threshold is unnecessary: every remaining non-delegate case is pair.
+
+Examples: V0 B0 C2 A2 -> human-only; V2 B0 C2 A2 -> pair;
+V1 B2 C2 A2 -> pair; V2 B2 C2 A0 -> pair; V2 B2 C2 A1 and
+V2 B2 C2 A2 -> delegate only with valid verification.
+
+Complete truth table, without hard overrides and with valid verification available:
+H = human-only, P = pair, D = delegate. Row digits are V then B; column digits are
+C then A. Hard overrides make every cell H. Without valid verification, both D cells
+become P; every other cell stays unchanged.
+
+| V/B \ C/A | 00 | 01 | 02 | 10 | 11 | 12 | 20 | 21 | 22 |
+|---|---|---|---|---|---|---|---|---|---|
+| 00 | H | H | H | H | H | H | H | H | H |
+| 01 | H | H | H | H | P | P | H | P | P |
+| 02 | H | H | H | H | P | P | H | P | P |
+| 10 | H | H | H | H | P | P | H | P | P |
+| 11 | H | P | P | P | P | P | P | P | P |
+| 12 | H | P | P | P | P | P | P | P | P |
+| 20 | H | H | H | H | P | P | H | P | P |
+| 21 | H | P | P | P | P | P | P | P | P |
+| 22 | H | P | P | P | P | P | P | D | D |
 
 ## 4. Comment conventions (plugin + skills)
 

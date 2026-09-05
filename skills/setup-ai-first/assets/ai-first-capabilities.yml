@@ -9,7 +9,7 @@
 # `.ai-first/capabilities-guide.md` for field definitions and examples.
 
 schema: ai-first-capabilities/v2
-version: 2026.09 # Bump whenever profiles, approvals, or capabilities change.
+version: "2026.09.1" # Bump whenever profiles, approvals, or capabilities change.
 
 # Defaults are deliberately conservative. An omitted value never grants trust.
 defaults:
@@ -83,8 +83,8 @@ approvals: []
 # Profile derivation (after final scores and tier derivation):
 #   human-only             -> no profile
 #   pair                   -> deep-planning
-#   delegate, V=2, B=2     -> bulk-mechanical
-#   delegate, V=2, B=1     -> deep-planning
+#   delegate, A=2         -> bulk-mechanical
+#   delegate, A=1         -> deep-planning
 #   investigation          -> triage; escalate contested findings to deep-planning
 
 # Invariants enforced by `decompose-and-classify`:

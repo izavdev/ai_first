@@ -125,31 +125,28 @@ Classification is not a vibe check. Each execution item is scored 0-2 on four ax
 | **V** Verifiability | Success is a judgment call | Partially checkable | One machine-runnable command proves it |
 | **B** Blast radius *(2 = small)* | Auth, payments, migrations, public API contracts | Internal behavior, cross-team consumers | Isolated, reversible, behind tests or flags |
 | **C** Context locality | Needs knowledge from heads, chat threads, stakeholders | Mostly in repo, minor linkable context | Everything in repo + linked docs |
-| **A** Ambiguity residue *(2 = none)* | Open judgment calls remain | Minor naming or structure decisions | Mechanical transformation |
+| **A** Ambiguity residue *(2 = none)* | Open judgment calls remain | Bounded naming/structure choices within established conventions | Mechanical transformation |
 
 ### Figure 2 - Tier derivation
 
 ```mermaid
 flowchart TD
-    Q1{Hard override?<br/>secrets, migrations, legal}
-    Q2{B = 0?<br/>high blast radius}
-    Q3{V below 2?<br/>no verify command}
-    Q4{Sum >= 5, no zero?}
-    Q5{All axes = 2?<br/>V2 B2 C2 A2}
+    Q1{Hard override?}
+    Q2{Two or more zero scores?}
+    Q3{V=2, B=2, C=2, A>=1?}
+    Q4{Valid verification command?}
     HO["human-only"]
     PA["pair"]
     DE["delegate"]
 
     Q1 -- yes --> HO
     Q1 -- no --> Q2
-    Q2 -. "yes: cap at pair, continue" .-> Q3
+    Q2 -- yes --> HO
     Q2 -- no --> Q3
-    Q3 -. "yes: downgrade to pair, continue" .-> Q4
-    Q3 -- no --> Q5
-    Q5 -- yes --> DE
-    Q5 -- no --> Q4
-    Q4 -- yes --> PA
-    Q4 -- "no, two or more zeros" --> HO
+    Q3 -- no --> PA
+    Q3 -- yes --> Q4
+    Q4 -- no --> PA
+    Q4 -- yes --> DE
 
     classDef delegate fill:#e7f3e8,stroke:#2e7d32,color:#20242b
     classDef pair fill:#faf2dd,stroke:#b5850b,color:#20242b
@@ -159,11 +156,19 @@ flowchart TD
     class HO human
 ```
 
-*Rules apply top-down, first match wins; dotted edges cap or downgrade and continue.*
+*Rules apply top-down, first match wins, using final post-capability scores.
+A=1 permits only local choices within linked conventions and explicit stop conditions.
+B = 0 and V < 2 prohibit delegation; they do not weaken human-only outcomes.*
 
-> **The fixed-value rule is the system's sharpest insight.** Every Delegate execution item must carry exactly one machine-runnable verification command. If the classifier cannot produce one, that is not a formatting problem - it is the classification. An item whose success no machine can check was never safe to hand to a machine unsupervised. The absence of the command *is* the classifier, and the tier downgrades to Pair automatically.
+> **The fixed-value rule is the system's sharpest insight.** Every Delegate execution item must carry exactly one machine-runnable verification command that checks its completion criteria. If the classifier cannot produce one, the item cannot be Delegate. It becomes Pair unless a hard override or two zero scores require Human-only. A successful exit code alone does not establish that the command checks the intended outcome.
 
 ---
+
+Decomposition should actively make useful work delegable: resolve decisions, link
+context, establish verification, and separate sensitive work where a real boundary
+exists. Keep coherent execution units rather than maximizing task count. Planned
+prerequisites do not improve current scores; finish them before reclassification.
+Material changes to an approved brief require renewed grooming and approval.
 
 ## 4. Mistake-proofing: the enforcement architecture
 
@@ -377,6 +382,9 @@ itself a more favorable classification.
 
 ### Models are a profile, not a tier
 
+Delegate items with A=1 route to `deep-planning` for bounded implementation judgment;
+mechanical A=2 delegate items route to `bulk-mechanical`.
+
 Model selection joins the same indirection. Execution items record a *profile* (deep-planning, bulk-mechanical, triage) and the manifest resolves profiles to models, because model names churn far faster than work items live - an upgrade should be a one-line edit, not a rewrite of a year of history. Profile selection then needs no new judgment, because it falls out of scores the classifier already computed: where verifiability is maximal, a cheap model is rational, since a wrong answer is caught mechanically before it costs anything. Where verifiability is weak, you are relying on the model's judgment and should pay for it. **Verification, not model capability, is what makes cheap models safe.**
 
 > **The failure mode to design against is capability inflation.** Everyone believes their new skill works, and a manifest built on belief would quietly upgrade tiers across the board. Two devices prevent it. Entries start *provisional* and may not adjust any score until telemetry promotes them - a threshold of merged delegate items in that class with zero escalations - and demote automatically when escalation rates climb. And the sacred rule stays loud: nothing may ever raise B. That is the rule that will get argued away first if it is not defended explicitly.
@@ -404,8 +412,8 @@ verify: dotnet test --filter Category=Checkout   (required for delegate)
 classes: isolated-code-change                    (stable capability-matching slugs)
 scores: V2 B1 C2 A2        (post-manifest, raw scored first)
 profile: deep-planning     (resolves to a model via the manifest)
-manifest: 2026.09          (capability version, for retro comparability)
-capability-sources: ai-first-capabilities/v2@2026.09  (plus applied metadata id@version)
+manifest: 2026.09.1          (capability version, for retro comparability)
+capability-sources: ai-first-capabilities/v2@2026.09.1  (plus applied metadata id@version)
 rationale: mechanical refactor behind existing test suite
 bounce: 0
 context: ADR-014, #4412, wiki/payments-contract

@@ -32,17 +32,50 @@ Failure messages ARE the process documentation. Always include the remediation s
 
 - Each execution item must be usable in a cold agent session by someone (or something) with no conversation history. The test: could a new team member pick this up from the item alone? If not, it is missing context links, not more prose.
 - Query the docs MCPs during decomposition. Link the actual ADRs, specs, and contracts each item depends on into its `context:` field; do not restate their content.
-- Atomic means one verifiable outcome per execution item. If its definition of done needs the word "and" twice, split it.
+- Prefer the largest coherent unit with one independently verifiable outcome and bounded consequences. Split when outcomes, risks, or prerequisites differ; do not create tiny items merely to increase the delegate count.
 - Order execution items by dependency; link blocking relationships as described in `.ai-first/tracker.md`.
 - Carry the parent's human-only list down: any item touching a listed area inherits the hard override.
+
+### Resolve delegation blockers
+
+Aim to maximize useful work that can be delegated successfully. Before final
+classification, inspect each candidate's verification, blast radius, context, and
+remaining decisions. For any blocker, take the following bounded preparation pass:
+
+1. Retrieve and link missing specs, conventions, examples, and acceptance details.
+   Resolve implementation choices already settled by those sources. Ask the human
+   for unresolved product, architecture, or scope decisions; never decide them just
+   to improve a score. If this changes the approved brief materially or exposes an
+   unresolved parent decision, stop decomposition and return it for grooming and approval.
+2. Identify a command that actually checks the outcome. If a validator must be built
+   or a decision requires investigation, create a separately classified prerequisite
+   with its own acceptance criteria; do not count planned evidence as available.
+3. Separate sensitive changes and human-only decisions from independently executable
+   implementation where the boundary is real. A small auth or public-contract edit
+   retains its blast radius; splitting and better tests alone never justify raising B.
+4. Re-score each resulting item on the evidence available now, then apply the capability
+   policy below. Dependent items retain their current tier and explicit blockers until
+   prerequisites are completed and the user invokes reclassification. Never assign
+   delegate based on a hoped-for test, context document, or decision.
+
+For A=1 delegate items, list the allowed local naming/structure choices, link the
+established conventions, and add `stop-ask` conditions for changes to behavior,
+architecture, contracts, dependencies, or security policy beyond the agreed scope.
+An unresolved decision in any of those areas is A=0, not bounded judgment.
+A=2 items remain fully mechanical.
+
+Report which blockers were resolved, which prerequisite items remain, and why work
+still needs pair or human-only execution. Judge the decomposition by useful scope
+that can be executed and verified independently, not the number of delegate items.
 
 ## Classification
 
 For each execution item, score V, B, C, A per schema section 3 and apply the derivation rules IN ORDER. Non-negotiables:
 
 - Hard overrides first. Check the item against schema rule 3.1 and the parent's human-only list before scoring.
-- B = 0 caps at pair. No exceptions for "but it is well tested".
-- The fixed-value rule: if you cannot write a single machine-runnable `verify` command with a boolean exit code, the item is NOT delegate. Do not invent a vague command to force the tier. Downgrade to pair and state in `rationale` that verifiability was the limiter - this is a feature of the system, not a failure.
+- Delegate requires final V=2, B=2, C=2, A>=1 and valid verification. A=1 must satisfy the bounded-choice contract above.
+- Two or more final zero scores mean human-only. B = 0 and V < 2 prohibit delegation; they never replace human-only with pair.
+- The fixed-value rule: if you cannot write a single machine-runnable `verify` command with a boolean exit code, the item is NOT delegate. Do not invent a vague command to force the tier. Use pair unless a hard override or two zero scores require human-only, and state in `rationale` that verifiability was the limiter - this is a feature of the system, not a failure.
 - Record `scores:` in the block exactly as computed, even when overrides made them moot. They are the audit trail for tier challenges.
 
 ### Capability manifest

@@ -20,6 +20,24 @@ Decompose the approved brief into small execution items with dependency links.
 3. It scores each item's raw properties using the project schema, then reads the capability manifest and applicable approved metadata.
 4. It creates linked children, applies exactly one tier label to each, and posts a parent summary with tiers and rationales.
 
+## Make more work delegable
+
+Decomposition actively resolves delegation blockers: it links missing context,
+uses established conventions, obtains necessary human decisions, and identifies
+acceptance checks. It keeps the largest coherent units that can be independently
+verified. Sensitive work stays separately classified when a real boundary allows it.
+
+For example, an internal formatting feature can become V2 B2 C2 A1 after its output
+behavior is agreed, an acceptance check exists, and local conventions are linked.
+The agent may choose a private helper name and file structure within those conventions.
+It must stop before introducing a new dependency or changing the agreed behavior.
+
+If the acceptance check still needs to be built, that is a prerequisite with its own
+tier. The feature stays at its current tier and blocked until the check exists and
+reclassification confirms eligibility. A promised prerequisite does not raise scores.
+Material changes to the approved brief return to grooming and approval. Splitting a
+sensitive change into smaller pieces does not itself reduce its blast radius.
+
 ## Understand the classification
 
 Each axis ranges from 0 to 2; higher means more delegable.
@@ -34,8 +52,8 @@ Each axis ranges from 0 to 2; higher means more delegable.
 The [schema's ordered derivation rules](../skills/setup-ai-first/assets/ai-first-schema.md#3-classification-rubric) determine the tier. Key constraints:
 
 - Hard overrides, including the parent's human-only list, take precedence.
-- B = 0 caps the tier at pair. Capabilities never raise B.
-- Delegate requires all four final scores to be 2 and a real, single `verify` command with a boolean exit code.
+- Two or more final zero scores require human-only. B = 0 and V < 2 prohibit delegation without weakening human-only outcomes. Capabilities never raise B.
+- Delegate requires V=2, B=2, C=2, A>=1 and a real, single `verify` command that checks completion and returns a boolean exit status. A=1 allows bounded naming/structure choices within linked conventions and explicit stop conditions; A=2 is mechanical.
 - Enabled, proven capabilities can raise V, C, or A by at most one point per axis in total, only for matching task classes. Provisional or unapproved claims do not change scores.
 
 ## Review the generated items

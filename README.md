@@ -79,6 +79,16 @@ skills/
 
 The setup skill owns the distributable contract assets. It copies them into the consuming repository because the capability manifest and terminology are team-specific and because standalone skill installers may copy only selected skill directories. The workflow skills always read the project-local `.ai-first/` files, so tracker choice and vocabulary are runtime configuration rather than build-time forks.
 
+Decomposition aims to maximize useful delegable work by resolving missing context,
+decisions, and verification before final classification. Delegate requires V=2,
+B=2, C=2, A>=1 and valid verification. A=1 permits bounded implementation choices
+within linked conventions and explicit stop conditions; A=2 is mechanical. Planned
+prerequisites do not improve a task's current classification.
+
+Existing installations must rerun setup to reconcile the updated project-local
+schema and capability profile routing before using this policy. The description
+block remains `[ai-first:v1]`; its field format has not changed.
+
 Custom skills can advertise classification-relevant behavior in an
 `ai-first-capability.yml` beside their `SKILL.md`. `decompose-and-classify` scans
 the configured project-local skill roots, but metadata is only a claim: it has no
@@ -108,5 +118,17 @@ The comment supplies the approver identity that Linear's label mutation API does
 ## Development
 
 Edit the four `SKILL.md` files and the setup assets directly. Validate all skills and both plugin manifests before releasing. Bump both plugin versions together.
+
+Run the reference classifier checks with Python 3 (no third-party dependencies):
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+`src/ai_first/classification.py` implements tier derivation from final scores. The
+checks cover all 81 score combinations, hard overrides, missing verification,
+invalid inputs, and agreement with the truth table embedded in the installed
+schema. This reference function does not score tasks, validate command coverage,
+or enforce tracker or PR state.
 
 The team-facing background material remains in [`whitepaper.md`](whitepaper.md) and [`assets_ai_first/`](assets_ai_first/). The [tracker enforcement specification](assets_ai_first/plugin-workflow-spec.md) defines a tracker-neutral rule engine and adapter contract.
