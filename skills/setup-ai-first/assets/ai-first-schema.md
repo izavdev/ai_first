@@ -170,10 +170,12 @@ kind: task
 tier: delegate | pair | human-only
 verify: <single machine-runnable command, required when tier=delegate>
 classes: <comma-separated stable task-class slugs>
+raw-scores: V2 B0 C2 A0
 scores: V2 B0 C2 A0
+capability-deltas: V0 B0 C0 A0
 profile: bulk-mechanical | deep-planning | triage    <execution profile, delegate/pair only>
-manifest: 2026.09.1                                    <capability manifest version used>
-capability-sources: ai-first-capabilities/v2@2026.09.1  <plus applied metadata id@version values>
+manifest: 2026.09.2                                    <capability manifest version used>
+capability-sources: ai-first-capabilities/v2@2026.09.2  <plus applied metadata id@version values>
 rationale: <one line, human-readable>
 bounce: 0
 failed-cycles: none
@@ -201,7 +203,14 @@ Field rules:
 - `classes` records one or more narrow, stable task-class slugs used to match
   capability `covers` entries. Classification must not invent a broader class to
   make a capability apply.
-- `scores` records the four classification axes (section 3) for auditability: V=verifiability, B=blast radius, C=context locality, A=ambiguity, each 0-2. Record them POST-manifest (final values), and name any applied capability effect in `rationale`.
+- `raw-scores` records V/B/C/A before capability adjustment, each 0-2.
+- `scores` records final post-capability values. `capability-deltas` records the
+  actual added values, each 0 or 1, with B always 0. Final must equal raw plus delta,
+  without exceeding 2. Record per-source actual effects and prerequisite evidence
+  in rationale/context; approved sources that add nothing are not applied effects.
+  Missing legacy raw values cannot be inferred from final scores: re-score before
+  applying further effects. Experimental baseline/observed scores belong in trial
+  records, not these execution classification fields.
 - `profile` names an execution profile from `ai-first-capabilities.yml`, never a model name. Model names churn far faster than work items live; the indirection means a model upgrade is a one-line manifest edit rather than a mass rewrite of historical items.
 - `manifest` records the capability manifest version in force at classification time. Without it, retro data is uninterpretable across tooling changes: you cannot tell whether tier accuracy moved because the rubric improved or because the toolset did. Cheap to record now, impossible to reconstruct later.
 - `capability-sources` records the central manifest schema/version and every

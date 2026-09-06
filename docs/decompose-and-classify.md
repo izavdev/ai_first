@@ -58,7 +58,7 @@ The [schema's ordered derivation rules](../skills/setup-ai-first/assets/ai-first
 
 ## Review the generated items
 
-Each child should contain a summary, acceptance criteria, source context links, and the task schema block. Check its `tier`, final `scores`, `classes`, `rationale`, `bounce`, `manifest`, and `capability-sources`; delegate/pair items also identify an execution `profile`.
+Each child should contain a summary, acceptance criteria, source context links, and the task schema block. Check its `tier`, `raw-scores`, final `scores`, `capability-deltas`, `classes`, `rationale`, `bounce`, `manifest`, and `capability-sources`; delegate/pair items also identify an execution `profile`.
 
 A delegate item must include a usable `verify` command and at least one `stop-ask` condition. Confirm the command checks the actual outcome and that a new session can understand the item from its linked context. For registry-backed checks, confirm `verify-id` selects a reviewed command with demonstrated acceptance coverage. Retain the task snapshot and the runner result so the reviewer can match the evidence to the tested code and requirements. Each item must carry exactly one of `ai-delegate`, `ai-pair`, or `human-only`, matching its block.
 

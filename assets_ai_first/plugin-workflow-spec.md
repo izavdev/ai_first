@@ -256,9 +256,13 @@ responsibilities of a future enforcement integration, not core adoption prerequi
 Persist tracker-neutral identifiers and rule data:
 
 - classification events: tracker, container, item, task classes, tier, scores,
-  manifest version, capability sources, timestamp, actor origin;
+  manifest version, capability sources, raw/final scores and deltas, prerequisite
+  evidence, timestamp, actor origin;
 - tier changes: from, to, reason (`human-challenge`, `escalation`, `reclassify`);
 - bounces and verification outcomes by item and run;
+- actual capability usage and reviewed trial records, including version, task class,
+  baseline/observed scores, axis evidence, human interventions, and failed or
+  inconclusive outcomes; never infer usage from a classification approval;
 - violations, unverifiable checks, correction outcomes, and adapter errors by rule;
 - detection and correction latency.
 

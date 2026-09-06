@@ -380,7 +380,7 @@ mechanical A=2 delegate items route to `bulk-mechanical`.
 
 Model selection joins the same indirection. Execution items record a *profile* (deep-planning, bulk-mechanical, triage) and the manifest resolves profiles to models, because model names churn far faster than work items live - an upgrade should be a one-line edit, not a rewrite of a year of history. Profile selection then needs no new judgment, because it falls out of scores the classifier already computed: where verifiability is maximal, a cheap model is rational, since a wrong answer is caught mechanically before it costs anything. Where verifiability is weak, you are relying on the model's judgment and should pay for it. **Verification, not model capability, is what makes cheap models safe.**
 
-> **The failure mode to design against is capability inflation.** Everyone believes their new skill works, and a manifest built on belief would quietly upgrade tiers across the board. Two devices prevent it. Entries start *provisional* and may not adjust any score until telemetry promotes them - a threshold of merged delegate items in that class with zero escalations - and demote automatically when escalation rates climb. And the sacred rule stays loud: nothing may ever raise B. That is the rule that will get argued away first if it is not defended explicitly.
+> **The failure mode to design against is capability inflation.** Everyone believes their new skill works, and a manifest built on belief would quietly upgrade tiers across the board. Two devices prevent it. Entries start *provisional* and may not adjust any score until telemetry promotes them - the latest ten completed supervised trials per class/version on distinct tasks, demonstrating each claimed effect - and suspend effects pending demotion review when observed failures exceed the policy threshold. And the sacred rule stays loud: nothing may ever raise B. That is the rule that will get argued away first if it is not defended explicitly.
 
 One clean boundary is worth stating, since the two are easily conflated: retrieval has no place in *classification*, but it belongs in *execution*. An agent working an execution item should absolutely retrieve context at work time. The manifest simply tells the classifier that such retrieval is possible - which is what raises C in the first place.
 
@@ -403,10 +403,12 @@ kind: task
 tier: delegate | pair | human-only
 verify: dotnet test --filter Category=Checkout   (required for delegate)
 classes: isolated-code-change                    (stable capability-matching slugs)
-scores: V2 B1 C2 A2        (post-manifest, raw scored first)
+raw-scores: V2 B1 C2 A2
+scores: V2 B1 C2 A2        (post-manifest)
+capability-deltas: V0 B0 C0 A0
 profile: deep-planning     (resolves to a model via the manifest)
-manifest: 2026.09.1          (capability version, for retro comparability)
-capability-sources: ai-first-capabilities/v2@2026.09.1  (plus applied metadata id@version)
+manifest: 2026.09.2          (capability version, for retro comparability)
+capability-sources: ai-first-capabilities/v2@2026.09.2  (plus applied metadata id@version)
 rationale: mechanical refactor behind existing test suite
 bounce: 0
 failed-cycles: none

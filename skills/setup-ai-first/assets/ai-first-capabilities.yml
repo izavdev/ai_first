@@ -9,7 +9,7 @@
 # `.ai-first/capabilities-guide.md` for field definitions and examples.
 
 schema: ai-first-capabilities/v2
-version: "2026.09.1" # Bump whenever profiles, approvals, or capabilities change.
+version: "2026.09.2" # Bump whenever profiles, approvals, or capabilities change.
 
 # Defaults are deliberately conservative. An omitted value never grants trust.
 defaults:
@@ -64,6 +64,7 @@ capabilities: []
 #     description: Produces a boolean result for the covered change class.
 #     evidence: []
 #     documentation: [docs/testing.md]
+#     requirements: [Project test runtime and fixtures are available]
 #     limitations: [Does not exercise external integrations]
 
 # Explicit approvals for metadata discovered in custom skill directories.
@@ -92,11 +93,20 @@ approvals: []
 # C2. Only status=proven changes scores. Provisional entries may be reported only.
 # C3. At most +1 per entry and +1 total per axis may be applied to one task.
 # C4. No capability may raise B. Better tooling cannot reduce consequences.
-# C5. Promotion to proven requires >=10 merged covered delegate tasks with zero
-#     escalations; record the evidence. Belief or documentation alone is insufficient.
-# C6. Demote to provisional when escalation exceeds 20% over the last 20 covered tasks.
+# C5. Promotion needs the latest 10 completed supervised trials on distinct tasks
+#     per covered class, for this exact version, all passing with reviewed evidence
+#     of actual use and an isolated +1 on EACH claimed axis. Pair tasks qualify;
+#     experimental scores never upgrade execution. See capabilities-guide.md.
+# C6. Review the latest 20 completed uses per class/version, counting escalations,
+#     failed acceptance, and unplanned human rescue as failures. Above 20% (5/20),
+#     propose demotion; block effects pending review. Serious scope/coverage defects
+#     suspend effects immediately. No background telemetry service is shipped.
 # C7. Discovered metadata has no effect without a matching central approval.
 # C8. Approval covers/effects may narrow metadata claims, never broaden them.
 # C9. Missing, malformed, conflicting-duplicate, or version-mismatched entries
 #     have no effect. Semantically identical copies with one ID/version count once.
 # C10. Every applied capability and source version is recorded on the task.
+# C11. Check current availability, requirements, freshness, permissions, and
+#      limitations before each effect. Unknown/failed prerequisites mean no effect.
+# C12. Record raw scores, final scores, actual per-axis deltas, applied sources,
+#      prerequisite evidence, and actual execution use; never infer use from approval.

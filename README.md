@@ -147,7 +147,9 @@ python3 -m unittest discover -s tests -v
 
 `src/ai_first/classification.py` implements tier derivation from final scores.
 `src/ai_first/workflow.py` provides reference mode dispatch and duplicate-safe
-reclassification transitions; it does not perform tracker writes. The
+reclassification transitions; it does not perform tracker writes.
+`src/ai_first/capabilities.py` provides reference score adjustment and supervised
+trial eligibility checks. It does not authenticate evidence or promote capabilities. The
 checks cover all 81 score combinations, hard overrides, missing verification,
 invalid inputs, approval digests and revocation, and agreement with the truth table embedded in the installed
 schema. This reference function does not score tasks, validate command coverage,

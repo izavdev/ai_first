@@ -58,7 +58,34 @@ Coverage should use narrow, stable task classes. An entry can claim at most +1 p
 
 New or materially changed capabilities start `provisional`, even when registration is approved. They do not affect classification.
 
-Promotion to `proven` requires recorded telemetry for **at least 10 merged delegate tasks in every approved covered class, with zero escalations**. Documentation or successful demos do not replace that evidence. An escalation rate above 20% over the last 20 covered tasks triggers a demotion recommendation under manifest invariant C6.
+Promotion requires the **latest ten completed supervised trials on distinct tasks
+per covered class and exact version**, all passing and demonstrating each claimed
+axis improvement with actual-use evidence. Pair tasks qualify; experimental scores
+never upgrade the execution tier. Record prerequisites, baseline/observed scores,
+outputs, human interventions, and reviewer identity. Keep failed/inconclusive trials
+in the history. Ten successes are an initial threshold, not proof of reliability.
+
+Use the installed guide's trial record and evaluation procedure. For example:
+
+```text
+$update-ai-first-capabilities
+Plan a supervised trial of mcp:docs version 1 on this pair task.
+Evaluate whether it retrieves the missing context without human rescue.
+Keep the current tier; propose the trial and evidence record before execution.
+```
+
+A request to plan or review a trial does not authorize running the candidate tool.
+For live evaluation, authorize the intended actions and retain the task's human
+execution restrictions. A B=0 class may establish a C or A improvement while
+remaining capped at pair after promotion.
+
+Before every effect, verify current requirements, permissions, freshness, and scope.
+Unknown prerequisites or missing current evidence mean no effect. At five or more
+failures in twenty completed uses per class/version, suspend effects and propose
+demotion; failures include escalation, unmet acceptance, and unplanned human rescue.
+Serious coverage defects suspend effects immediately. These are review rules, not
+an installed background monitor. Existing proven entries need evidence reconciliation
+before further score effects.
 
 Custom skill metadata remains a claim until the central manifest contains an enabled, proven approval for its exact ID and version. Central approval may narrow the metadata's coverage or effects, but cannot expand them. Self-declared `enabled`, `status`, or `evidence` metadata fields do not grant authority.
 
