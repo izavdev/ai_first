@@ -94,8 +94,9 @@ kind: brief
 (keep the closing `---` from the schema example inside the fence - only the opening delimiter
 needs to change from a bare `---` line to a code fence). All Linear-side consumers (`/groom`,
 `/decompose-and-classify`, any future PR pipeline) must locate the block by finding the last
-fenced code block whose first line is `[ai-first:v1]`, not by the literal "`---`-preceded"
-rule in schema 2.3 - that rule holds for other trackers, not this one.
+fenced code block whose first line is `[ai-first:v1]`, using the Linear encoding now defined explicitly in schema 2.3. The reference
+fixtures cover this Markdown representation; live storage behavior still requires
+integration validation.
 
 ## Label bootstrap
 

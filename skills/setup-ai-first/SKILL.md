@@ -95,6 +95,8 @@ Show the proposed tracker, approval policy (and solo identity if selected), plan
 .ai-first/
 ├── README.md
 ├── ai-first-schema.md
+├── workflow-contract.json
+├── installation.json
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
 ├── plan-storage.md
@@ -105,6 +107,8 @@ Show the proposed tracker, approval policy (and solo identity if selected), plan
 
 The source files shipped with this skill are:
 
+- [assets/workflow-contract.json](assets/workflow-contract.json)
+- [assets/asset-manifest.json](assets/asset-manifest.json) (source provenance; used to write installation.json)
 - [assets/ai-first-schema.md](assets/ai-first-schema.md)
 - [assets/plan-storage.md](assets/plan-storage.md)
 - [assets/approval.py](assets/approval.py)
@@ -158,6 +162,28 @@ together. Explain that every consumer must support `brief-approval/v1`; existing
 briefs need re-grooming and fresh approval, and label-only/bare-marker grants are
 not migrated automatically. Preserve historical comments for audit. Do not grant
 approval or rewrite historical grants during setup.
+
+### Record the installed asset revision
+
+Read the shipped `asset-manifest.json` and verify its hashes against the actual
+source assets before copying. On mismatch, report the inconsistent package and stop
+instead of recording misleading provenance. Install `workflow-contract.json` beside
+the prose schema; reconcile them together on reruns.
+
+After writing and verifying the selected files, write `.ai-first/installation.json`
+with `schema: ai-first-installation/v1`, setup date, package version, SHA-256 of the
+source asset manifest, source hashes for the selected assets, and final installed
+file hashes. Include the selected tracker and a source-to-destination path mapping
+(e.g. the chosen adapter becomes tracker.md). Exclude installation.json itself from
+its file hash map. Separate source hashes from installed hashes so confirmed team
+customizations remain visible. Include the source Git commit and dirty status only
+when verifiable in the source package checkout; otherwise record null, never guess.
+
+A receipt records provenance, not approval or a signature. Preserve customized files
+and show differences on reruns; do not use hash mismatches as permission to reset
+them. Keep the prior receipt until the update succeeds. Older projects without a
+receipt need a comparison with current installed content, not an invented history.
+No external metadata lookup or release download is needed to write this receipt.
 
 ## 8. Tracker bootstrap
 

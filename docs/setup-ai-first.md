@@ -34,6 +34,8 @@ The target repository should contain:
 .ai-first/
 ├── README.md
 ├── ai-first-schema.md
+├── workflow-contract.json
+├── installation.json
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
 ├── plan-storage.md
@@ -45,6 +47,16 @@ The target repository should contain:
 Check that `README.md` names the intended tracker, `terminology.md` contains the confirmed terms, and `tracker.md` is the selected adapter. Files are real copies so they remain usable independently of the skill installation.
 
 The shipped capability manifest has no enabled score-changing capabilities. Installed tools do not automatically become approved capabilities. Use [update-ai-first-capabilities](update-ai-first-capabilities.md) to review them.
+
+## Check installed provenance
+
+Setup copies the machine-readable field contract with the schema and writes
+`installation.json`: package version, source asset hashes, actual installed hashes,
+tracker/path mapping, and source commit/dirty status when known. Source and installed
+hashes are separate so team customizations are visible. An unknown source commit
+is recorded as null; the verified asset hashes still identify the copied content.
+On reruns, compare the receipt and current files before reconciling updates. The
+receipt is an audit aid, not a permission to overwrite customized configuration.
 
 ## Choose where plans live
 

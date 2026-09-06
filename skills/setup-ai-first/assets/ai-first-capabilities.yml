@@ -9,7 +9,7 @@
 # `.ai-first/capabilities-guide.md` for field definitions and examples.
 
 schema: ai-first-capabilities/v2
-version: "2026.09.2" # Bump whenever profiles, approvals, or capabilities change.
+version: "2026.09.3" # Bump whenever profiles, approvals, or capabilities change.
 
 # Defaults are deliberately conservative. An omitted value never grants trust.
 defaults:
@@ -81,12 +81,13 @@ approvals: []
 #     evidence: []
 #     notes: Approved for evaluation; no score effect until promoted to proven.
 
-# Profile derivation (after final scores and tier derivation):
-#   human-only             -> no profile
-#   pair                   -> deep-planning
-#   delegate, A=2         -> bulk-mechanical
-#   delegate, A=1         -> deep-planning
-#   investigation          -> triage; escalate contested findings to deep-planning
+# Routing is data so validators can check every target exists.
+profile_routing:
+  human-only: null
+  pair: deep-planning
+  delegate-a1: deep-planning
+  delegate-a2: bulk-mechanical
+  investigation: triage
 
 # Invariants enforced by `decompose-and-classify`:
 # C1. An entry applies only when enabled=true and the task class is in `covers`.

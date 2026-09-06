@@ -171,7 +171,7 @@ the item is how tiers inflate.
   prerequisites are lost before execution.
 - Record `manifest:` with the central file's `version`, `capability-sources:` with
   the manifest schema/version plus every metadata `id@version` actually applied,
-  and `profile:` per the central derivation table. When no external metadata was
+  and `profile:` per central `profile_routing`. When no external metadata was
   applied, record only the central manifest source.
 - If the central manifest is malformed, classify on raw scores alone and say so in
   `rationale`. Ignore an individually malformed, conflicting-duplicate,

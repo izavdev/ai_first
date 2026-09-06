@@ -26,7 +26,7 @@ design. Installing the skills does not prevent direct board edits or unverified 
 6. [How-to guides](#6-how-to-guides)
 7. [Adoption plan and metrics](#7-adoption-plan-and-metrics)
 8. [How the framework evolves with your tooling](#8-how-the-framework-evolves-with-your-tooling)
-- [Appendix A: schema reference](#appendix-a-schema-reference-condensed)
+- [Appendix A: contract sources](#appendix-a-contract-sources)
 
 ---
 
@@ -132,57 +132,17 @@ The workflows ship once as standard Agent Skills consumed by GitHub Copilot, Cla
 
 ## 3. The delegation classifier
 
-Classification is not a vibe check. Each execution item is scored 0-2 on four axes, and the tier is derived by fixed rules applied in order. Recording the scores on the item makes every classification challengeable: "this got Delegate but blast radius is high" is a productive review comment precisely because the scores are visible.
+Classification records verifiability, blast radius, context locality, and remaining
+ambiguity, with a rationale a reviewer can challenge. Decomposition should remove
+real blockers to useful delegation while preserving consequential boundaries and
+human-only work. A verification command must check the acceptance criteria, not
+merely return success.
 
-| Axis | 0 | 1 | 2 |
-|---|---|---|---|
-| **V** Verifiability | Success is a judgment call | Partially checkable | One machine-runnable command proves it |
-| **B** Blast radius *(2 = small)* | Auth, payments, migrations, public API contracts | Internal behavior, cross-team consumers | Isolated, reversible, behind tests or flags |
-| **C** Context locality | Needs knowledge from heads, chat threads, stakeholders | Mostly in repo, minor linkable context | Everything in repo + linked docs |
-| **A** Ambiguity residue *(2 = none)* | Open judgment calls remain | Bounded naming/structure choices within established conventions | Mechanical transformation |
-
-### Figure 2 - Tier derivation
-
-```mermaid
-flowchart TD
-    Q1{Hard override?}
-    Q2{Two or more zero scores?}
-    Q3{V=2, B=2, C=2, A>=1?}
-    Q4{Valid verification command?}
-    HO["human-only"]
-    PA["pair"]
-    DE["delegate"]
-
-    Q1 -- yes --> HO
-    Q1 -- no --> Q2
-    Q2 -- yes --> HO
-    Q2 -- no --> Q3
-    Q3 -- no --> PA
-    Q3 -- yes --> Q4
-    Q4 -- no --> PA
-    Q4 -- yes --> DE
-
-    classDef delegate fill:#e7f3e8,stroke:#2e7d32,color:#20242b
-    classDef pair fill:#faf2dd,stroke:#b5850b,color:#20242b
-    classDef human fill:#f9e9e6,stroke:#c05b4d,color:#20242b
-    class DE delegate
-    class PA pair
-    class HO human
-```
-
-*Rules apply top-down, first match wins, using final post-capability scores.
-A=1 permits only local choices within linked conventions and explicit stop conditions.
-B = 0 and V < 2 prohibit delegation; they do not weaken human-only outcomes.*
-
-> **The fixed-value rule is the system's sharpest insight.** Every Delegate execution item must carry exactly one machine-runnable verification command that checks its completion criteria. If the classifier cannot produce one, the item cannot be Delegate. It becomes Pair unless a hard override or two zero scores require Human-only. A successful exit code alone does not establish that the command checks the intended outcome.
-
----
-
-Decomposition should actively make useful work delegable: resolve decisions, link
-context, establish verification, and separate sensitive work where a real boundary
-exists. Keep coherent execution units rather than maximizing task count. Planned
-prerequisites do not improve current scores; finish them before reclassification.
-Material changes to an approved brief require renewed grooming and approval.
+The normative [rubric, derivation, and complete truth table](skills/setup-ai-first/assets/ai-first-schema.md#3-classification-rubric)
+are maintained in the installed schema and exercised by the reference classifier.
+The [decomposition guide](docs/decompose-and-classify.md) explains bounded implementation
+judgment, prerequisites, and reclassification. This paper deliberately does not
+repeat their evolving numeric rules or field examples.
 
 ## 4. Mistake-proofing: the enforcement architecture
 
@@ -383,60 +343,28 @@ itself a more favorable classification.
 
 ### Models are a profile, not a tier
 
-Delegate items with A=1 route to `deep-planning` for bounded implementation judgment;
-mechanical A=2 delegate items route to `bulk-mechanical`.
+The project manifest's `profile_routing` data selects execution profiles. See the
+[capability guide](skills/setup-ai-first/assets/capabilities-guide.md) for policy and configuration.
 
 Model selection joins the same indirection. Execution items record a *profile* (deep-planning, bulk-mechanical, triage) and the manifest resolves profiles to models, because model names churn far faster than work items live - an upgrade should be a one-line edit, not a rewrite of a year of history. Profile selection then needs no new judgment, because it falls out of scores the classifier already computed: where verifiability is maximal, a cheap model is rational, since a wrong answer is caught mechanically before it costs anything. Where verifiability is weak, you are relying on the model's judgment and should pay for it. **Verification, not model capability, is what makes cheap models safe.**
 
-> **The failure mode to design against is capability inflation.** Everyone believes their new skill works, and a manifest built on belief would quietly upgrade tiers across the board. Two devices prevent it. Entries start *provisional* and may not adjust any score until telemetry promotes them - the latest ten completed supervised trials per class/version on distinct tasks, demonstrating each claimed effect - and suspend effects pending demotion review when observed failures exceed the policy threshold. And the sacred rule stays loud: nothing may ever raise B. That is the rule that will get argued away first if it is not defended explicitly.
+> **The failure mode to design against is capability inflation.** Everyone believes their new skill works, and a manifest built on belief would quietly upgrade tiers across the board. Two devices prevent it. Entries start *provisional* and may not adjust any score until telemetry promotes them - the supervised evidence requirements in the project capability policy - and suspend effects pending demotion review when observed failures exceed the policy threshold. And the sacred rule stays loud: nothing may ever raise B. That is the rule that will get argued away first if it is not defended explicitly.
 
-One clean boundary is worth stating, since the two are easily conflated: retrieval has no place in *classification*, but it belongs in *execution*. An agent working an execution item should absolutely retrieve context at work time. The manifest simply tells the classifier that such retrieval is possible - which is what raises C in the first place.
-
----
-
-## Appendix A: schema reference (condensed)
-
-### Tags
-
-`ai-first`, `groomed`, `brief-approved` (human-applied only, never by a skill) on regular parent items; exactly one of `ai-delegate` / `ai-pair` / `human-only` plus optional `ai-escalated` on small execution items.
-
-### Small execution item description block
-
-`kind: task` below is stable schema vocabulary. It remains unchanged when a team calls the small item a Sub-issue, Sub-task, or something else.
-
-```
----
-[ai-first:v1]
-kind: task
-tier: delegate | pair | human-only
-verify: dotnet test --filter Category=Checkout   (required for delegate)
-classes: isolated-code-change                    (stable capability-matching slugs)
-raw-scores: V2 B1 C2 A2
-scores: V2 B1 C2 A2        (post-manifest)
-capability-deltas: V0 B0 C0 A0
-profile: deep-planning     (resolves to a model via the manifest)
-manifest: 2026.09.2          (capability version, for retro comparability)
-capability-sources: ai-first-capabilities/v2@2026.09.2  (plus applied metadata id@version)
-rationale: mechanical refactor behind existing test suite
-bounce: 0
-failed-cycles: none
-context: ADR-014, #4412, wiki/payments-contract
-stop-ask: any change outside listed projects; new package reference; test count decreases
----
-```
-
-### Invariants
-
-1. No normal decomposition without revision-bound human brief approval under the project policy (independent by default, configured solo self-approval allowed).
-2. No Active execution item without one tier tag and a valid block.
-3. No delegate execution item without a verification command executed on the completed change, with evidence reviewed by a human. Automated merge blocking is optional.
-
-Everything else is soft.
-
-### Machine comment prefixes
-
-`[ai-first] BLOCKED:` precondition failure with remediation. `[ai-first] REVERTED:` plugin corrected a change. `[ai-first] ESCALATED:` bounce threshold reached. `[ai-first] SCHEMA:` malformed block.
+Classification uses the available evidence to score the task before applying centrally approved effects. Retrieval may supply missing context during preparation or execution; an advertised retrieval capability alone is insufficient. Record actual prerequisites, use, and improvements under the capability policy.
 
 ---
 
-*Full normative definitions live in `ai-first-schema.md`, which all four consumers (both skills, the PR pipeline, and the plugin) treat as the single source of truth. Capability state lives in `ai-first-capabilities.yml`.*
+## Appendix A: contract sources
+
+- [Workflow schema](skills/setup-ai-first/assets/ai-first-schema.md): fields, approval,
+  classification, retry and escalation semantics.
+- [Machine-readable field contract](skills/setup-ai-first/assets/workflow-contract.json):
+  required fields and types; the schema field table is generated from this file.
+- [Capability policy](skills/setup-ai-first/assets/ai-first-capabilities.yml) and
+  [guide](skills/setup-ai-first/assets/capabilities-guide.md): routing, approvals,
+  supervised trials, and ongoing review.
+- [Development checks](README.md#development): parser fixtures, behavior tests,
+  packaging checks, and shipped asset hashes.
+
+Installed project contracts remain authoritative. Setup records their source and
+installed hashes so future changes can be compared without losing team customizations.

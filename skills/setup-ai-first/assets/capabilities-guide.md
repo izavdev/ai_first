@@ -8,7 +8,8 @@ approve it. Installation or discovery never enables a capability automatically.
 
 Nothing that changes V, C, or A. The shipped `capabilities` and `approvals` lists
 are empty, and the defaults are `enabled: false` and `status: provisional`.
-Execution profiles are supplied as editable routing aliases; they do not change
+`profile_routing` maps pair, human-only, delegate-a1, delegate-a2, and investigation
+to execution profiles (null for human-only). Execution profiles are editable aliases; they do not change
 scores. Replace their placeholder model names before relying on profile routing.
 
 Use `update-ai-first-capabilities` to register, review, approve, promote, demote,

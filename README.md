@@ -73,6 +73,8 @@ skills/
 │   ├── SKILL.md
 │   └── assets/
 │       ├── ai-first-schema.md
+│       ├── workflow-contract.json
+│       ├── asset-manifest.json
 │       ├── plan-storage.md
 │       ├── ai-first-capabilities.yml
 │       ├── capabilities-guide.md
@@ -140,23 +142,35 @@ do not satisfy `brief-approval/v1`. See [approval instructions](docs/groom.md#ob
 
 Edit the four `SKILL.md` files and the setup assets directly. Validate all skills and both plugin manifests before releasing. Bump both plugin versions together.
 
-Run the reference classifier checks with Python 3 (no third-party dependencies):
+Run all repository checks with Python 3:
 
 ```bash
-python3 -m unittest discover -s tests -v
+python3 -m pip install -r requirements-dev.txt
+python3 scripts/validate_repo.py
 ```
 
-`src/ai_first/classification.py` implements tier derivation from final scores.
-`src/ai_first/workflow.py` provides reference mode dispatch and duplicate-safe
-reclassification transitions; it does not perform tracker writes.
-`src/ai_first/decomposition.py` provides reference plan selection, stable unit keys,
-and retry reconciliation for partial creation. Tracker inventory and safe writes
-remain adapter responsibilities.
-`src/ai_first/capabilities.py` provides reference score adjustment and supervised
-trial eligibility checks. It does not authenticate evidence or promote capabilities. The
-checks cover all 81 score combinations, hard overrides, missing verification,
-invalid inputs, approval digests and revocation, and agreement with the truth table embedded in the installed
-schema. This reference function does not score tasks, validate command coverage,
-or enforce tracker or PR state.
+This validates skill front matter, native manifest versions/paths, strict JSON/YAML,
+local documentation link targets, capability defaults/profile routing, generated
+contract fields, shipped asset hashes, and the complete regression suite. It makes
+no network requests and does not enable CI or enforce tracker/PR state. Live tracker
+compatibility and external links require separate integration checks.
+
+After reviewing intentional changes to setup assets or contract fields, refresh the
+field table and source hash manifest, inspect the generated diff, then validate again:
+
+```bash
+python3 scripts/validate_repo.py --refresh
+python3 scripts/validate_repo.py
+```
+
+A plain validation run never rewrites files. `--refresh` updates generated metadata,
+not plugin versions or approvals. Setup uses the source manifest to write an
+installation receipt with source and final installed hashes, preserving customizations.
+
+The reference modules under `src/ai_first/` cover classification, capability evidence,
+mode/escalation transitions, decomposition retries, and description parsing. Tests
+cover all 81 score combinations, approval revisions, verification evidence, and
+tracker-normalized Markdown round trips. They can also run independently without
+third-party packages using `python3 -m unittest discover -s tests -v`.
 
 The team-facing background material remains in [`whitepaper.md`](whitepaper.md) and [`assets_ai_first/`](assets_ai_first/). The [tracker enforcement specification](assets_ai_first/plugin-workflow-spec.md) defines a tracker-neutral rule engine and adapter contract.

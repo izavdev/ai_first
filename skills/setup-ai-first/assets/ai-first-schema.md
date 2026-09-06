@@ -174,8 +174,8 @@ raw-scores: V2 B0 C2 A0
 scores: V2 B0 C2 A0
 capability-deltas: V0 B0 C0 A0
 profile: bulk-mechanical | deep-planning | triage    <execution profile, delegate/pair only>
-manifest: 2026.09.2                                    <capability manifest version used>
-capability-sources: ai-first-capabilities/v2@2026.09.2  <plus applied metadata id@version values>
+manifest: 2026.09.3                                    <capability manifest version used>
+capability-sources: ai-first-capabilities/v2@2026.09.3  <plus applied metadata id@version values>
 rationale: <one line, human-readable>
 bounce: 0
 failed-cycles: none
@@ -310,10 +310,74 @@ progress from actual items and intents. No automatic retry deletes or recreates 
 
 ### 2.3 Parsing rules (all consumers)
 
-- Locate the LAST occurrence of a line equal to `[ai-first:v1]` preceded by `---` and followed by `key: value` lines until a closing `---`.
-- Unknown keys are ignored (forward compatibility). Missing required keys are a schema violation.
-- The block is human-editable BY DESIGN. Devs challenge a tier by editing `tier:` and the tag, then commenting why. Consumers therefore treat the block as intent and validate schema on every read; the plugin comments on malformed blocks rather than assuming they parse (see plugin spec).
-- Edit history of the block IS the audit trail. No separate log.
+The installed `workflow-contract.json` is the machine-readable field/type inventory.
+The reference codec is `src/ai_first/schema.py` in the package source. It accepts
+tracker-normalized Markdown; an adapter must decode ADO HTML or other storage formats
+before using it. The fixtures test these documented encodings, not live vendor storage.
+
+- Locate the LAST exact sentinel line. If that candidate is malformed, fail; never
+  fall back to an older valid block. Field lines are lowercase `key: value`, split
+  at the first colon. Reject duplicate keys (including unknown keys), malformed
+  lines, missing delimiters, empty required values, or invalid types.
+- Canonical GitHub/ADO Markdown uses a triple-backtick fence, an opening `---`, the
+  sentinel and fields, closing `---`, and a closing fence. Bare `---` wrapping remains
+  readable there. Linear uses a fence directly before the sentinel, then the same
+  fields and closing `---` inside the fence. Missing closing fences fail.
+- Normalize CRLF/CR to LF; preserve other human text and value whitespace. The
+  canonical writer adds one newline between human text and the opening delimiter;
+  the reader excludes that separator and the wrapper from returned human text.
+  Content after the complete closing block is ignored. Unknown keys are retained
+  for round trips but have no policy effect.
+- `uint` is a canonical nonnegative decimal integer, not boolean/float text; `date`
+  is YYYY-MM-DD; `uuid` is lowercase canonical; `digest` is sha256 plus 64 lowercase
+  hex digits. Scores are V/B/C/A in that order, each 0-2; deltas are each 0-1 with
+  B=0 and final=raw+delta. Slugs and cycle IDs follow the field rules above.
+- All brief/task fields in the table are required for newly written contracts.
+  `optional_task` fields are conditional: delegate requires verify and stop-ask;
+  delegate/pair require profile; human-only omits profile. A known profile must exist
+  in the project manifest. Any provenance field requires all provenance fields and
+  a matching computed key. The parser does not treat absent provenance as proof of
+  a single-item exception. Legacy records need the documented migration/re-scoring
+  before strict validation; do not fabricate missing audit fields.
+- Tier must respect scores and bounce caps and match exactly one tier label when
+  labels are supplied. Bounce must equal the unique ledger length; at >=2 the
+  ai-escalated label is required. Hard-override truth, approval identity, command
+  coverage, profile policy and remote evidence still need semantic checks by consumers.
+- Human edits remain allowed within these rules, with edit history as the audit trail.
+
+<!-- contract-fields:start -->
+| Scope | Field | Type/value |
+|---|---|---|
+| brief | `kind` | `brief` |
+| brief | `approval-protocol` | `brief-approval/v1` |
+| brief | `brief-revision` | `uuid` |
+| brief | `requester` | `text` |
+| brief | `brief-digest` | `digest` |
+| brief | `brief-url` | `text` |
+| brief | `groomed-on` | `date` |
+| brief | `open-decisions` | `uint` |
+| task | `kind` | `task` |
+| task | `tier` | `tier` |
+| task | `classes` | `slugs` |
+| task | `raw-scores` | `scores` |
+| task | `scores` | `scores` |
+| task | `capability-deltas` | `deltas` |
+| task | `manifest` | `text` |
+| task | `capability-sources` | `text` |
+| task | `rationale` | `text` |
+| task | `bounce` | `uint` |
+| task | `failed-cycles` | `cycles` |
+| task | `context` | `text` |
+| optional_task | `verify` | `text` |
+| optional_task | `verify-id` | `slug` |
+| optional_task | `profile` | `text` |
+| optional_task | `stop-ask` | `text` |
+| provenance | `decomposition-parent` | `text` |
+| provenance | `parent-revision` | `uuid` |
+| provenance | `parent-brief-digest` | `digest` |
+| provenance | `decomposition-unit` | `uuid` |
+| provenance | `decomposition-key` | `digest` |
+<!-- contract-fields:end -->
 
 ## 3. Classification rubric
 
