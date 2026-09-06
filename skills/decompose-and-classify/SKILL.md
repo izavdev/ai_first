@@ -19,7 +19,26 @@ and all user-facing text. The rubric in schema section 3 is normative; do not
 classify from intuition. The tracker file explains which tools to call, how labels
 are read and written, and how approval identity is checked.
 
-## Guard clauses (run before anything else, fail loudly)
+## Select the mode before mode-specific guards
+
+After reading project configuration, fetch the input item read-only and inspect its
+schema kind. Respect the user's explicit mode; never silently switch modes after a
+guard fails. A malformed block must be repaired, not treated as an unclassified item.
+
+| Input | Mode | Next step |
+|---|---|---|
+| Brief-kind parent, no conflicting explicit mode | Decompose | Run the normal parent guards below |
+| Existing task-kind item | Reclassify | Go directly to Reclassify mode; update this item only |
+| Unclassified small item explicitly requested in single-item mode | Single-item | Go directly to Single-item mode; classify this item only |
+| Missing/ambiguous kind or incompatible explicit mode | Unresolved | Ask for the intended mode or schema repair before writes |
+
+Accept `single-task` as an alias for `single-item`. Missing approval never selects
+single-item automatically. Shared classification, verification trust, and capability
+rules apply in every mode; decomposition and child-creation output apply only to
+normal decomposition. Reclassification does not create children or bypass the
+approval needed for subsequent execution.
+
+## Normal decomposition guards
 
 1. Fetch the parent via the tracker MCP. Missing `groomed` or `brief-approved` label: post `[ai-first] BLOCKED:` comment with the exact missing step and STOP.
 2. Parse the parent description block (schema 2.1). Malformed: `[ai-first] SCHEMA:` comment and STOP.
@@ -129,20 +148,58 @@ the item is how tiers inflate.
   summary, and continue.
   Never guess at capabilities.
 
-## Output per execution item
+## Normal decomposition output per execution item
 
 1. Immediately before each child write, re-fetch the parent, linked brief, label, and approval records and repeat the revision/digest check against the approved snapshot used for decomposition. On change, stop and list any children already created; require renewed review. Create a child item using the configured small term, linked to the regular parent as described in `.ai-first/tracker.md`.
-2. Description: human-readable summary, acceptance criteria, then the block per schema 2.2 with all required fields, including `classes` and `capability-sources`. `stop-ask` must contain at least one condition for delegate items (e.g. "any change outside listed projects; any new package reference; test count decreases").
+2. Description: human-readable summary, acceptance criteria, then the block per schema 2.2 with all required fields, including `classes` and `capability-sources`, with `bounce: 0` and `failed-cycles: none` on new items. `stop-ask` must contain at least one condition for delegate items (e.g. "any change outside listed projects; any new package reference; test count decreases").
 3. Apply exactly one tier label.
 4. After all items: post a summary comment on the parent listing each item using the configured small term, its tier, and its one-line rationale, so gate 1's approver sees the classification outcome without opening every child.
 
-## Reclassify mode (invoked with a small item ID)
+## Reclassify mode (existing task-kind item)
 
-1. Parse the item's task-kind schema block. Increment `bounce` when invoked due to a failed verification cycle.
-2. Re-score honestly against the item's current state; do not anchor on the previous scores.
-3. At `bounce` = 2: rewrite `tier: pair`, swap labels, add `ai-escalated`, post `[ai-first] ESCALATED:` with the failure history. This is mandatory, not advisory - the line stops itself.
-4. A human editing the tier manually is legitimate (schema 2.3). Reclassify mode respects a human-set tier unless a new bounce forces escalation; note the human override in the comment.
+1. Fetch and validate this item's task block and exactly-one matching tier label.
+   Read its current scope, failure history, and attributable human tier challenges.
+   Retrieve linked parent restrictions when present. Missing or revoked parent
+   approval does not prevent recording failure or a stricter classification, but
+   does not authorize execution. If inherited restrictions cannot be determined,
+   record the failure and preserve the stricter of the existing tier and the bounce
+   cap; block any upgrade until the missing context is restored.
+2. For a failed verification cycle, require evidence and a stable cycle ID. A CI
+   key includes provider, pipeline/run ID, and attempt; a local cycle uses a UUID
+   recorded with its command, tested commit, task snapshot, and output. Reuse the
+   ID when reporting the same cycle again. Individual assertions/log lines are not
+   separate cycles. Passes, cancellations, and ordinary reclassification do not count.
+3. Read `failed-cycles` and `bounce` per the schema. Add only a new failed cycle ID
+   and set bounce to the ledger length. Recover missing legacy history before a
+   count-changing update; never reset a nonzero count or invent historical IDs.
+4. Re-score using the current evidence, inherited restrictions, and shared rubric.
+   Apply hard overrides and the two-zero rule first. At `bounce >= 2`, delegation
+   is prohibited: choose pair unless the derived or attributable human-set tier is
+   human-only. Keep `ai-escalated` at and above the threshold, including on retries
+   and ordinary reclassification. Success does not reset the count.
+5. Preserve a human-set tier when it is at least as restrictive as the resulting
+   tier. A more permissive challenge cannot override hard restrictions, missing
+   verification, or the bounce cap; explain the limiting rule. A human can resolve
+   scope or evidence and request re-scoring, not silently waive those constraints.
+6. Re-fetch before writing. Persist the ledger, count, tier, profile, and exactly
+   one matching tier label together where the adapter permits. Re-evaluate on any
+   concurrent change, and verify the final state after partial writes. Update this
+   item only; select its profile from the final tier and capability policy (omit
+   profile for human-only). Post one failure-history/escalation comment for the
+   cycle, reusing its ID to avoid duplicate comments on retries. If conditional
+   writes are unavailable, report the concurrency limitation rather than claiming
+   exactly-once updates across simultaneous sessions.
 
-## Single-item mode
+## Single-item mode (explicit, unclassified small item)
 
-For small items where `groom` is overkill: run interrogation-lite (destination + definition of done only), then classify the item itself as one execution unit. State clearly that gate 1 was skipped and why that is acceptable (small, low blast radius); refuse single-item mode when B scores 0. Accept “single-task mode” as a backwards-compatible alias.
+Run interrogation-lite for destination and definition of done, establish one
+bounded outcome and its touched surface, then use shared classification rules.
+Refuse when B=0 or the scope is not a small bounded item; direct the user to groom
+instead. Do not run normal parent approval guards or create child items. Existing
+brief-kind or task-kind items use their corresponding mode, not this shortcut.
+
+Write the task block and one tier label onto the input item itself. Initialize
+`bounce: 0` and `failed-cycles: none`; provide acceptance criteria, context, and
+stop conditions. Explicitly record why skipping Gate 1 is acceptable for this item.
+The exception does not remove hard overrides, verification requirements, or human
+review. This mode's output is an item summary, not a parent decomposition summary.

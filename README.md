@@ -145,7 +145,9 @@ Run the reference classifier checks with Python 3 (no third-party dependencies):
 python3 -m unittest discover -s tests -v
 ```
 
-`src/ai_first/classification.py` implements tier derivation from final scores. The
+`src/ai_first/classification.py` implements tier derivation from final scores.
+`src/ai_first/workflow.py` provides reference mode dispatch and duplicate-safe
+reclassification transitions; it does not perform tracker writes. The
 checks cover all 81 score combinations, hard overrides, missing verification,
 invalid inputs, approval digests and revocation, and agreement with the truth table embedded in the installed
 schema. This reference function does not score tasks, validate command coverage,

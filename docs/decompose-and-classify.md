@@ -15,7 +15,7 @@ $decompose-and-classify #123
 Decompose the approved brief into small execution items with dependency links.
 ```
 
-1. The skill checks the parent labels, approval identity, exact revision/content digest, schema, and open decisions. It repeats approval checking before each child write. A failed guard produces a comment with remediation and stops decomposition.
+1. The skill selects normal decomposition for the brief-kind parent, then checks the parent labels, approval identity, exact revision/content digest, schema, and open decisions. It repeats approval checking before each child write. A failed guard produces a comment with remediation and stops decomposition.
 2. It splits work into one verifiable outcome per item, links source context, orders dependencies, and carries down the parent's human-only restrictions.
 3. It scores each item's raw properties using the project schema, then reads the capability manifest and applicable approved metadata.
 4. It creates linked children, applies exactly one tier label to each, and posts a parent summary with tiers and rationales.
@@ -73,7 +73,7 @@ Definition of done: The heading matches the approved copy and the existing
 page-content check passes using <actual verification command>.
 ```
 
-This path asks only for destination and definition of done, then classifies the item itself. It explicitly records why skipping the brief approval gate is acceptable for this small, low-blast-radius change. It refuses when B = 0. `single-task mode` is a supported alias. Using this mode does not guarantee a delegate tier.
+Explicit single-item mode applies to an unclassified small item. It asks for destination and definition of done, establishes a bounded scope, then classifies that item itself without the normal parent guards or child creation. An existing task goes to reclassification; a brief goes to normal decomposition. It explicitly records why skipping the brief approval gate is acceptable for this small, low-blast-radius change. It refuses when B = 0. `single-task mode` is a supported alias. Using this mode does not guarantee a delegate tier.
 
 ## Reclassify after a failed verification cycle
 
@@ -83,9 +83,33 @@ The verification cycle failed. Here is the command, output, and failure history:
 <paste relevant failure details>
 ```
 
-The skill re-scores the current item and increments `bounce` when reclassification follows a failed verification cycle. At `bounce: 2`, it must set `tier: pair`, swap the tier label, add `ai-escalated`, and post the failure history in an escalation comment.
+The skill selects reclassification before normal parent-approval guards and updates
+only the existing task. It can record a failure even when parent approval is absent
+or revoked; that does not authorize further execution. It still needs the parent's
+human-only restrictions to justify an upgrade. Missing restrictions preserve the
+existing tier or a stricter bounce cap while the missing context is resolved.
 
-To challenge a tier manually, a human can edit both the `tier` field and matching label, then comment with the reason. Reclassification respects that override unless a new bounce forces escalation.
+Give each failed verification cycle a stable ID and evidence: CI provider/pipeline,
+run ID and attempt, or a local UUID saved with the command, tested commit, task
+snapshot, and output. Re-report the same ID on retries. One failing run is one cycle,
+not one cycle per failed assertion. Passes, cancellations, and routine reclassification
+do not increment or reset the count.
+
+The item records `failed-cycles` alongside `bounce`. A new failed ID increments
+once; duplicates do not. At **bounce >= 2**, the item cannot delegate: pair is the
+maximum, and any hard override, two-zero result, or stricter human-only challenge
+remains human-only. Keep `ai-escalated` at and above the threshold. Profiles follow
+the final tier, with no profile for human-only.
+
+A human can request a stricter tier or provide evidence for re-scoring. Editing the
+tier cannot waive hard restrictions, absent verification, or the bounce cap. A
+successful later run alone does not restore delegation.
+
+For legacy items with bounce zero, initialize an empty ledger. For nonzero counts,
+reconstruct cycle IDs from failure evidence first. If the history is incomplete,
+preserve the count and existing cap and ask for reconciliation; never reset it or
+invent past failures. Repeated comments use the same cycle ID, and concurrent/partial
+writes must be reconciled against the current item state.
 
 ## Troubleshoot
 

@@ -181,9 +181,16 @@ Violation: comment only with `[ai-first] SCHEMA:` and the failing rule. Do not r
 
 Trigger: a `VerificationResult` reports failure for a Delegate small item and its `bounce` value was not incremented within the configured grace period.
 
-Check: deduplicate by verification run key and compare accepted failure results with the block's current bounce value.
+Check: deduplicate by the shared cycle key and compare accepted failure results with the task block's `failed-cycles` ledger. The service's transport idempotency store alone cannot detect a cycle already recorded by a skill.
 
-Violation: increment `bounce` conditionally. At the threshold, rewrite the tier to Pair, replace the tier label, add `ai-escalated`, and post `[ai-first] ESCALATED:` with verification run links.
+Violation: add the evidenced failed cycle ID to the task's shared `failed-cycles`
+ledger conditionally and set `bounce` to its length. Include provider, pipeline/run,
+and attempt in the key, identically to the skill. If the key is already recorded,
+do not increment or post a duplicate comment. At or above the threshold, cap the
+tier at Pair, preserve stricter Human-only restrictions, keep `ai-escalated`, and
+post `[ai-first] ESCALATED:` with verification links. Reclassification, success, and
+replay do not reset the ledger or lift the cap. Recover incomplete legacy history
+before incrementing; never fabricate IDs or trust a raw count as deduplication.
 
 ## 8. Ordering, idempotency, and loop prevention
 
@@ -215,7 +222,7 @@ The pipeline sends a tracker-independent event:
 ```text
 VerificationResult
   pipelineKey
-  runKey
+  runKey               includes attempt; same cycle ID used by skills
   itemReference
   outcome              pass | fail | cancelled
   runUrl
@@ -263,7 +270,7 @@ Do not store display terms as semantic dimensions; store `large`, `regular`, and
 
 Global defaults:
 
-- `bounceThreshold`: `2`;
+- `bounceThreshold`: `2` (fixed by the shared schema; adapters may not override it);
 - `verificationGracePeriod`: tracker-independent duration;
 - `schemaCommentDebounce`: `1h`;
 - `pollInterval`: `60s`;
@@ -340,3 +347,11 @@ Every adapter must pass the same behavioral suite:
 - Revalidate before child writes; on concurrent change, stop and report partial work.
 - Upgrade all consumers together; older consumers ignoring the new protocol cannot
   claim approval integrity.
+
+### Reclassification and bounce acceptance cases
+
+- Replaying one failed cycle through both skill and service increments once.
+- A distinct attempt increments separately; multiple assertions in one run do not.
+- Counts of 2 and above cap at Pair without weakening Human-only, including on replay.
+- Human challenges cannot waive hard overrides, missing verification, or the cap.
+- Incomplete legacy history blocks count changes while preserving existing restrictions.

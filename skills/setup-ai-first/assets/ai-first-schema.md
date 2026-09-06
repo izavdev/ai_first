@@ -176,6 +176,7 @@ manifest: 2026.09.1                                    <capability manifest vers
 capability-sources: ai-first-capabilities/v2@2026.09.1  <plus applied metadata id@version values>
 rationale: <one line, human-readable>
 bounce: 0
+failed-cycles: none
 context: <comma-separated links or IDs: ADRs, specs, related items>
 stop-ask: <semicolon-separated conditions under which an agent must halt>
 ---
@@ -207,7 +208,26 @@ Field rules:
   custom-skill metadata `id@version` whose effect was applied. When none was
   applied, record only the central manifest source. This makes discovered claims
   auditable without treating discovery as approval.
-- `bounce` is incremented by the skill on every failed verification cycle. At 2, tier is rewritten to `pair`, tags are swapped, `ai-escalated` is added, and a comment explains why.
+- `bounce` is the nonnegative count of distinct evidenced failed verification cycles.
+- `failed-cycles` is `none` for zero cycles, otherwise a comma-separated list of
+  unique stable IDs (letters, digits, `.`, `_`, `:`, `/`, `@`, `+`, `-`; start with a
+  letter or digit). The list length must equal bounce. CI IDs include provider,
+  pipeline/run ID and attempt; local IDs are UUIDs saved with execution evidence.
+  Re-reporting the same failed cycle never increments bounce. A genuinely new run
+  is a new cycle; test assertions within one run are not. Passes, cancellations,
+  and ordinary reclassification do not increment or reset the ledger.
+- At `bounce >= 2`, cap delegation at pair, preserve any stricter human-only result,
+  retain `ai-escalated`, and explain the failure history. Hard overrides and the
+  two-zero rule always win. Human tier challenges can tighten the result but cannot
+  waive rubric restrictions or the bounce cap. Use the final tier for profile routing.
+- Legacy `bounce: 0` without a ledger can initialize `failed-cycles: none`. For a
+  nonzero legacy count, reconstruct the unique cycle IDs from auditable failure
+  evidence before changing the count. If history is incomplete, preserve the count
+  and any already-required cap; block the count update with remediation. Never
+  fabricate IDs, silently reset the count, or count an unidentifiable retry again.
+- Store ledger and count in the same block update, re-read before writing, and
+  reconcile partial or concurrent updates. A future service and the skill must use
+  the same cycle IDs and ledger; separate counters would double-count failures.
 - `stop-ask` is the agent's halt list. An executing agent MUST stop and ask a human when any condition is met, instead of improvising.
 
 ### 2.3 Parsing rules (all consumers)

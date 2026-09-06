@@ -316,7 +316,7 @@ Three norms complete the system, and they fit on an index card:
 2. The agent must honor the `stop-ask` list verbatim. Any listed condition means halt and ask, never improvise.
 3. Run the `verify:` command locally before opening the PR. A failure here is bounce material: explicitly invoke reclassification with the failure evidence to update the counter.
 4. Open the PR linked to the execution item. Record the local verification evidence. If optional CI is installed, link its run and tested commit too.
-5. After the second failed cycle, invoke reclassification for the prescribed escalation; no background service is shipped to do this automatically.
+5. Use a stable ID for each failed cycle and invoke reclassification. At two or more distinct failures, the task stays capped at Pair, preserving any stricter Human-only restriction; retries of the same ID count once. No background service is shipped to do this automatically.
 
 ### How-to 6: Review a PR by tier
 
@@ -409,6 +409,7 @@ manifest: 2026.09.1          (capability version, for retro comparability)
 capability-sources: ai-first-capabilities/v2@2026.09.1  (plus applied metadata id@version)
 rationale: mechanical refactor behind existing test suite
 bounce: 0
+failed-cycles: none
 context: ADR-014, #4412, wiki/payments-contract
 stop-ask: any change outside listed projects; new package reference; test count decreases
 ---
