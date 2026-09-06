@@ -60,7 +60,7 @@ The [schema's ordered derivation rules](../skills/setup-ai-first/assets/ai-first
 
 Each child should contain a summary, acceptance criteria, source context links, and the task schema block. Check its `tier`, final `scores`, `classes`, `rationale`, `bounce`, `manifest`, and `capability-sources`; delegate/pair items also identify an execution `profile`.
 
-A delegate item must include a usable `verify` command and at least one `stop-ask` condition. Confirm the command checks the actual outcome and that a new session can understand the item from its linked context. Each item must carry exactly one of `ai-delegate`, `ai-pair`, or `human-only`, matching its block.
+A delegate item must include a usable `verify` command and at least one `stop-ask` condition. Confirm the command checks the actual outcome and that a new session can understand the item from its linked context. For registry-backed checks, confirm `verify-id` selects a reviewed command with demonstrated acceptance coverage. Retain the task snapshot and the runner result so the reviewer can match the evidence to the tested code and requirements. Each item must carry exactly one of `ai-delegate`, `ai-pair`, or `human-only`, matching its block.
 
 Classification creates execution contracts. Run implementation and verification next, and record the tested commit, command, result, and task link in the PR for human review. CI and automatic merge blocking are optional and do not affect delegation eligibility. See [optional PR verification](pr-verification.md) for GitHub and Azure DevOps templates.
 

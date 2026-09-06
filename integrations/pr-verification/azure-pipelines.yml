@@ -15,5 +15,5 @@ jobs:
         persistCredentials: false
       # Add your approved runtime and dependency setup steps here.
       # Do not map System.AccessToken or deployment credentials into this job.
-      - script: python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json
+      - script: python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json --check acceptance
         displayName: Run acceptance verification

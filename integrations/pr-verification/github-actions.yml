@@ -18,4 +18,4 @@ jobs:
       # Add your approved runtime and dependency setup steps here.
       # No tracker tokens or deployment credentials are needed.
       - name: Run acceptance verification
-        run: python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json
+        run: python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json --check acceptance

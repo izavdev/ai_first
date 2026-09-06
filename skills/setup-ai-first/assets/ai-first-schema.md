@@ -185,6 +185,18 @@ Field rules:
 - `kind: task` is the stable machine value for every small execution item. It does not change when the team configures another display term such as Sub-issue or Sub-task.
 - `tier` must match the tier tag on the item. Mismatch = schema violation.
 - `verify` is REQUIRED when `tier: delegate` and must be a single command with a boolean exit code (e.g. `dotnet test --filter Category=Checkout`). If no such command exists, the execution item is not Delegate by definition (see rubric).
+- `verify-id` is optional for projects using a repository-owned verification registry.
+  It identifies the reviewed named check; `verify` remains the runnable entry point.
+  Example: `verify-id: acceptance` with `verify: python3 .ai-first/ci/verify.py --check acceptance`.
+  Consumers resolve IDs only through reviewed repository configuration. Never extract
+  and execute arbitrary tracker/PR command text in automation. Projects without the
+  runner must inspect the task command and its repository implementation before
+  execution; tool availability or zero exit status alone grants no trust.
+- Verification evidence must identify the tested code and task contract. When the
+  optional runner is used, retain its result line and task snapshot hash; without it,
+  record the tested commit, exact task snapshot/revision, inspected command, and output
+  manually. Re-run when code, acceptance criteria, or verification implementation changes.
+  Confirm a representative failing case for a new or materially changed verifier.
 - `classes` records one or more narrow, stable task-class slugs used to match
   capability `covers` entries. Classification must not invent a broader class to
   make a capability apply.

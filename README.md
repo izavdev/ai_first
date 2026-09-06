@@ -13,7 +13,7 @@ all tracker changes or prevent merges outside the workflow.
 Delegate work requires actual verification and human review of its evidence.
 **Automated PR merge gates are optional.** Start with local verification, then adopt
 [optional GitHub Actions or Azure Pipelines templates](docs/pr-verification.md) when
-approved. Templates are dormant and setup does not activate them. The tracker
+approved. Templates use named repository checks and report the tested commit, configuration hashes, and optional task-snapshot binding. They are dormant and setup does not activate them. The tracker
 correction service remains a design specification.
 
 ## Install with the cross-agent wizard

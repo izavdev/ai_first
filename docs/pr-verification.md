@@ -26,7 +26,7 @@ exit code to simulate optionality: whether it blocks merging is a branch-policy
 choice. Existing organization policies may already require checks; confirm the
 policy before enabling a workflow.
 
-The templates run one repository-owned acceptance command. They do **not** fetch
+The templates select a named check from a repository-owned registry. They do **not** fetch
 tracker items, prove approval freshness, validate task tiers or parent approvals,
 post comments, or update bounce counts. They are verification starters, not the
 full tracker enforcement service described in the design specification.
@@ -40,37 +40,104 @@ Copy these files from this repository into the target repository:
 | `integrations/pr-verification/verify.py` | `.ai-first/ci/verify.py` |
 | `integrations/pr-verification/verification.example.json` | `.ai-first/ci/verification.json` |
 
-Edit `argv` to your real acceptance command, as an argument array. For example,
-if your project has that test script:
+Define a stable check ID mapped to your actual acceptance command. For example,
+if your project has this script:
 
 ```json
 {
-  "argv": ["npm", "run", "test:acceptance"],
-  "timeout_seconds": 1200
+  "schema": "ai-first-verification/v1",
+  "checks": {
+    "acceptance": {
+      "argv": ["npm", "run", "test:acceptance"],
+      "timeout_seconds": 1200,
+      "covers": "Inventory CSV export preserves the approved columns and filters",
+      "negative_case": "tests/export.spec.ts: incorrect column order fails the assertion; attach the reviewed failing run"
+    }
+  }
 }
 ```
+
+`covers` and `negative_case` are review evidence descriptions, not executable
+instructions or automatic approval. Before adopting a check, run a representative
+case where its acceptance criterion is violated and confirm a failure; then confirm
+the correct behavior passes. Mere nonempty metadata or a zero exit code cannot prove
+coverage. A no-op such as `true` does not qualify as a verifier.
 
 Run from the repository root:
 
 ```bash
-python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json
+python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json --check acceptance
 ```
 
-Python 3 and Git are required. Add your project's runtime, dependency installation,
-and test services to the CI template before the verification step. The empty example
-fails with exit 2 until configured. The runner records the checked-out commit and
-returns 0 for success, 1 for command failure, 2 for configuration/start errors,
-or 124 for timeout. Output goes to the terminal/build log; no tracker credentials
-are needed. The outer CI job also has a timeout.
+Python 3 and Git are required. Add project runtime/dependency setup and services
+before the CI step. The example has no executable command or coverage evidence and
+fails with exit 2 until configured. Unknown IDs, duplicate JSON keys, and old
+unversioned `argv` configs are rejected. To migrate an earlier starter config, wrap
+its command in the versioned `checks` mapping and document its coverage and negative
+case. Upgrade the runner and config together.
 
-A task may use this runner as its `verify` command only if the configured checks
-cover its acceptance criteria. A green general test suite is insufficient evidence
-for an unrelated task. Review a representative failing case before trusting a new
-check. Keep verification config, runner, tests, and workflow changes visible in
-review; use immutable action versions approved by your organization when adopting
-the GitHub example. The runner uses an argument array with no implicit shell, but
-executing repository code still requires an appropriate CI environment. Keep this
-verification job free of deployment secrets and privileged service connections.
+The runner executes only the selected registry argument array, with no implicit
+shell. It never loads a command from an issue description, PR body, or task snapshot.
+Do not add extra CLI arguments or shell fragments derived from tracker content.
+Multiple named checks can share a registry; select the appropriate ID in the task
+and CI configuration. Keep every registry command within the job's permitted scope.
+
+## Bind evidence to the task and tested code
+
+For task-specific evidence, save the current complete task description/schema block
+plus canonical task identity and any referenced acceptance requirements in a snapshot
+file. Include the parent revision/digest when applicable and pin or include linked
+requirements so the snapshot is self-contained. Use a reviewer-selected local path:
+
+```bash
+python3 .ai-first/ci/verify.py --check acceptance --contract /path/to/task-snapshot.md
+```
+
+The snapshot is hashed as exact bytes, never parsed or executed. Compare it with the
+current tracker task during review. The runner does not fetch or authenticate it:
+its hash binds the result to supplied content, not to an independently approved
+tracker revision. A changed task snapshot needs a new run and review.
+
+The final `AI_FIRST_RESULT` JSON line records:
+
+- selected check ID and checked-out commit;
+- SHA-256 of the registry, runner, and optional task snapshot;
+- whether the worktree was dirty and its fingerprint;
+- outcome and command exit status.
+
+Tracked diffs and non-ignored untracked file contents contribute to the fingerprint.
+A dirty local run records its actual state but is not proof that the clean commit
+passes; re-run after committing the final changes. Registry, runner, snapshot, HEAD,
+or worktree changes during a run produce `inputs-changed` and exit 2, even if the
+command returned zero. Configure normal test output directories in `.gitignore`
+before adoption, so expected generated reports do not alter those inputs. Ignored
+files, external services, dependencies, and transient changes restored during a run
+are outside this fingerprint; the environment and check coverage remain review responsibilities.
+
+Exit codes: 0 success, 1 command failure, 2 configuration/start errors or changed or
+unverifiable inputs, 124 timeout. Output goes to the terminal/build log. Keep the
+result line with the task link, snapshot, and reviewed run evidence. CI templates
+omit `--contract` by default, so their `contract_digest` is null: that is general
+repository-check evidence, not task-specific approval or verification. Add an
+explicit saved snapshot only through a reviewed configuration change.
+
+## Command trust and execution permissions
+
+Repository ownership alone does not make a command safe or sufficient. Review the
+registry, runner, workflow, and referenced test/script changes together. A PR can
+change these files; the starter templates do not prevent that or independently
+approve the new commands. Compare the result hashes to the reviewed files. If a
+future required gate needs a stronger trust boundary, load the runner and registry
+from an administrator-controlled immutable revision, independently of the PR, and
+protect changes to that policy. The optional starters make no such enforcement claim.
+
+The runner is not a sandbox. Keep its job free of deployment secrets, privileged
+service connections, and reusable privileged runners for untrusted PRs. The supplied
+jobs use hosted runners, no persisted checkout credentials, and no mapped tracker or
+deployment tokens. Commands can still execute arbitrary repository code and access
+whatever the environment permits. Use your organization's approved runtime/network
+restrictions, and pin GitHub actions to an approved immutable revision when adopting.
+Automated merge blocking remains optional throughout.
 
 ## GitHub Actions
 

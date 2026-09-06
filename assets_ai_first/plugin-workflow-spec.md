@@ -226,6 +226,24 @@ Preferred transport is an authenticated service endpoint or queue. `itemReferenc
 
 For installations that cannot call the service, an adapter may consume a structured tracker comment such as `[ai-first] VERIFY-RESULT: fail <run-url>`. Comment ingestion is a compatibility transport, not the core domain model. Authenticate or allow-list the posting identity so a human comment cannot forge a pipeline result.
 
+### Verification runner trust boundary
+
+Do not execute `verify:` text received from tracker items. A future automated gate
+must select an ID from an independently reviewed registry and run the verifier in
+an appropriately restricted environment. For enforce mode, use an administrator-
+controlled immutable runner/registry revision independent of the PR; changes require
+review before use. Match results to the code/merge commit, exact task snapshot and
+parent revision, check ID, and runner/registry versions. Authenticate the producer
+before accepting results; the starter runner's printed JSON is not a signed attestation.
+Recheck freshness at consumption. Generic CI runs with no task binding cannot satisfy
+a task-specific enforcement rule. Coverage must be established with representative
+failing-case evidence; checking for a nonempty command is only a static guard.
+
+The optional shipped runner records commit, worktree fingerprint, check ID, runner/
+registry hashes, and an optional supplied task-snapshot hash. It does not establish
+tracker approval, policy authority, or environment isolation. Those remain explicit
+responsibilities of a future enforcement integration, not core adoption prerequisites.
+
 ## 11. Telemetry
 
 Persist tracker-neutral identifiers and rule data:
