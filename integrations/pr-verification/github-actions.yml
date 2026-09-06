@@ -1,0 +1,21 @@
+# Copy to .github/workflows/ai-first-verification.yml only when ready to opt in.
+# Optional reporting until an administrator makes this check required.
+name: AI-first verification
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    name: AI-first acceptance
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      # Add your approved runtime and dependency setup steps here.
+      # No tracker tokens or deployment credentials are needed.
+      - name: Run acceptance verification
+        run: python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json

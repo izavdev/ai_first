@@ -285,10 +285,10 @@ Machine-posted comments are prefixed so they are filterable and never mistaken f
 - `[ai-first] SCHEMA:` malformed block detected, includes the failing rule
 - `[ai-first] REVERTED:` plugin moved state back (see plugin spec)
 
-## 5. Invariants (the three hard poka-yoke points)
+## 5. Workflow requirements and optional enforcement
 
 1. No normal decomposition without attributable human `brief-approved` on the parent, satisfying the project approval policy (independent by default; named self-approval allowed in solo mode). The explicit small, low-blast-radius single-item path is the documented gate-1 exception.
 2. No small execution item enters Active without exactly one tier tag and a schema-valid block.
-3. No `delegate` execution item without a `verify` command, and the PR pipeline executes that command as a merge precondition.
+3. No `delegate` execution item without a real `verify` command. Execute it against the completed change and record the tested commit and result for human review. Re-run after code changes. CI execution and automated merge blocking are optional; their absence alone does not downgrade a task.
 
-Everything else in the workflow is soft (detection or convention).
+Skills apply these requirements during invoked workflows; they do not monitor all tracker or repository changes. Activation is a team responsibility until a tracker enforcement service is deployed. A required CI check can automate verification at merge when the organization approves it, but installing these skills does not create that check.

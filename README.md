@@ -4,6 +4,18 @@ Poka-yoke skills for AI-assisted delivery: groom the request, require human appr
 
 The repository is now a portable Agent Skills package. There is no generation step and no agent-specific copy to keep in sync.
 
+## What is available now
+
+The package ships four workflow skills, a revision/digest approval helper, and a
+reference classifier with tests. Skills guide invoked sessions; they do not monitor
+all tracker changes or prevent merges outside the workflow.
+
+Delegate work requires actual verification and human review of its evidence.
+**Automated PR merge gates are optional.** Start with local verification, then adopt
+[optional GitHub Actions or Azure Pipelines templates](docs/pr-verification.md) when
+approved. Templates are dormant and setup does not activate them. The tracker
+correction service remains a design specification.
+
 ## Install with the cross-agent wizard
 
 ```bash

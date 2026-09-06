@@ -1,6 +1,11 @@
 # Spec: AI-First Tracker Enforcement Service
 
-Status: draft v3 for review
+Status: draft v3 for review — optional future service, not a shipped integration.
+
+The core skills work with local verification and human review. Required PR checks
+and tracker correction are optional adoption choices. The shipped GitHub/Azure CI
+starters run repository acceptance commands only; they do not implement this service
+or its tracker rules. See [optional verification](../docs/pr-verification.md).
 
 Depends on: [AI-first schema v1](../skills/setup-ai-first/assets/ai-first-schema.md), project-local `.ai-first/terminology.md`, and the active tracker adapter. The schema is normative; this spec does not redefine it.
 
@@ -152,7 +157,7 @@ Violation: remove `brief-approved` conditionally and post `[ai-first] REVERTED:`
 
 Trigger: a small item enters the adapter's `active` state category.
 
-Check: exactly one tier label, a schema-valid task-kind block, and agreement between `tier:` and the label.
+Check: exactly one tier label, a schema-valid task-kind block, and agreement between `tier:` and the label. A future enforce-capable adapter must also distinguish normal decomposition from the explicit single-item exception. For normal children, revalidate the parent's current revision-bound approval against the snapshot used for decomposition. Revoked, changed, or missing parent approval blocks activation. Before implementing this rule, define and validate durable parent-revision provenance and an attributable single-item exception record; do not infer an exception from a missing parent link. The shipped CI templates do not implement these checks.
 
 Violation: restore only the state field to its previous value and post `[ai-first] REVERTED:` naming the failed check and the configured small-item term. If the previous value is unavailable, move to the adapter-configured safe pre-active state. If neither is possible, report the violation without claiming it was reverted.
 

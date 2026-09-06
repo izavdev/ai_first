@@ -9,6 +9,9 @@ Use these guides in the repository where you want to manage delivery. Install th
 | [Groom a request](groom.md) | Turn an ask into a brief ready for human approval under the project policy. |
 | [Decompose and classify](decompose-and-classify.md) | Turn an approved brief into execution items, classify a small item, or reclassify after a failure. |
 
+See [optional PR verification](pr-verification.md) for local evidence, GitHub Actions,
+and Azure Pipelines adoption without a mandatory merge gate.
+
 ## Follow the workflow
 
 1. Run `setup-ai-first` once in the target repository.

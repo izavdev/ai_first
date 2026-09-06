@@ -62,7 +62,7 @@ Each child should contain a summary, acceptance criteria, source context links, 
 
 A delegate item must include a usable `verify` command and at least one `stop-ask` condition. Confirm the command checks the actual outcome and that a new session can understand the item from its linked context. Each item must carry exactly one of `ai-delegate`, `ai-pair`, or `human-only`, matching its block.
 
-Classification creates execution contracts. Run implementation and verification as the next stage of your delivery process; configure PR enforcement separately if required.
+Classification creates execution contracts. Run implementation and verification next, and record the tested commit, command, result, and task link in the PR for human review. CI and automatic merge blocking are optional and do not affect delegation eligibility. See [optional PR verification](pr-verification.md) for GitHub and Azure DevOps templates.
 
 ## Classify a small item directly
 

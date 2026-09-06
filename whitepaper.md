@@ -6,7 +6,13 @@
 > Reference implementation: tracker-neutral schema with Azure DevOps, GitHub Issues, and Linear adapters; Agent Skills for GitHub Copilot, Claude Code, and Codex
 > Companion artifacts: `ai-first-schema.md`, `ai-first-capabilities.yml`, `/groom`, `/decompose-and-classify`, plugin workflow spec
 
-**Abstract.** Most teams govern AI-assisted development with policy documents that nobody reads at the moment a mistake is being made. This paper describes a different approach: a delivery workflow in which the expensive mistakes are made structurally impossible or immediately visible, borrowing the poka-yoke (mistake-proofing) discipline from the Toyota Production System. Work items are groomed by an interrogation skill, decomposed into atomic execution items, and classified into three delegation tiers by four measurable signals. Enforcement lives in three layers (skill guard clauses, a PR verification pipeline, and a tracker-agnostic enforcement service) rather than in a wiki. The result is a system a whole team can follow without memorizing it, because the system corrects them faster than they can drift.
+**Abstract.** This framework makes AI-assisted work explicit: groom the request,
+approve a particular brief revision, decompose it, classify delegation, and verify
+the result. The repository ships workflow skills, approval and classification
+helpers, and dormant GitHub Actions/Azure Pipelines verification templates. Teams
+can start with local verification and human review. CI reporting and required merge
+checks are optional adoption steps; the tracker correction service is a future
+design. Installing the skills does not prevent direct board edits or unverified merges.
 
 ---
 
@@ -32,7 +38,7 @@ AI tooling makes this failure mode worse than it was for any previous process. T
 
 Manufacturing solved the same class of problem sixty years ago. The Toyota Production System's answer was not better documentation but **poka-yoke** - mistake-proofing. Instead of telling workers to be careful, you change the process so the mistake is either impossible to make (*prevention*) or impossible to miss (*detection*): the microwave that will not run with the door open, the jig that only accepts the part in the correct orientation. The device carries the discipline, so no vigilance is required.
 
-This paper applies that discipline to AI-assisted delivery. The framework has two halves: a **workflow** (groom, approve, decompose, classify, execute, verify) and an **enforcement architecture** that makes the workflow self-correcting. Neither half asks anyone to remember anything.
+This paper applies that discipline to AI-assisted delivery through a workflow and an optional enforcement architecture. The shipped skills help users follow the workflow; human review remains responsible for checking evidence when automated enforcement is absent.
 
 ---
 
@@ -61,7 +67,7 @@ flowchart TD
     E["ai-delegate<br/>agent executes, CI verifies"]
     F["ai-pair<br/>AI drafts, human steers"]
     G["human-only<br/>person executes, AI researches"]
-    H{{"Gate 2: PR review<br/>depth set by tier, pipeline enforces"}}
+    H{{"Gate 2: PR review<br/>depth set by tier, review evidence"}}
     I["Merge + retro<br/>tier accuracy feeds the next sprint"]
 
     A --> B --> C --> D
@@ -110,7 +116,7 @@ For a new setup, `Epic / Issue / Sub-issue` is a useful neutral default. It is o
 
 ### Why the skills are user-invoked
 
-Both workflows are deliberately *human-started*: grooming or decomposition begins because a person asks for that workflow, not because an agent silently changes the delivery state. Hosts that support explicit-only skill metadata use it; hosts such as Copilot may select a relevant skill from the user's request. In both cases, tracker mutations still occur only inside the requested workflow. The enforcement layer pays the usual discoverability cost: forget to groom, and a guard clause or enforcement comment tells you exactly which skill to run.
+Both workflows are deliberately *human-started*: grooming or decomposition begins because a person asks for that workflow, not because an agent silently changes the delivery state. Hosts that support explicit-only skill metadata use it; hosts such as Copilot may select a relevant skill from the user's request. In both cases, tracker mutations still occur only inside the requested workflow. During an invoked workflow, guard clauses explain missing steps. Sessions outside that workflow are not automatically redirected.
 
 The workflows ship once as standard Agent Skills consumed by GitHub Copilot, Claude Code, and Codex. There are no generated per-agent copies to drift. Native Claude and Codex plugin manifests can bundle the same skill tree, while cross-agent installers copy it into each host's recognized skill directory.
 
@@ -172,45 +178,32 @@ Material changes to an approved brief require renewed grooming and approval.
 
 ## 4. Mistake-proofing: the enforcement architecture
 
-The workflow is enforced by three independent layers. None of them is a document, and no single layer is load-bearing alone: bypass one and the next catches you. Prevention is applied *asymmetrically* - hard devices exist at exactly three points (the invariants below), and everything else stays soft, because a high-friction device gets routed around, and with AI tooling the route-around is one keystroke.
+The workflow can operate with local verification and human review. Optional CI
+reports acceptance results; an administrator may later make that check required.
+Tracker correction is a separate future service. These stages have different
+coverage and should not be presented as already deployed safeguards.
 
-### Figure 3 - Three enforcement layers over one shared state
+### Figure 3 - Adoption options
 
 ```mermaid
-flowchart TB
-    subgraph SK["Skills - PREVENTION"]
-        direction TB
-        S1["guard clauses refuse to run<br/>error message = the process doc<br/>approver is not requester check<br/>auto-downgrade without verify<br/>2-bounce escalation<br/>sequence + fixed-value devices"]
-    end
-    subgraph PP["PR pipeline - PREVENTION AT MERGE"]
-        direction TB
-        P1["blocks PR without linked item<br/>blocks missing tier<br/>EXECUTES the verify command<br/>posts tier review checklist<br/>reports results for escalation<br/>merge precondition, not promise"]
-    end
-    subgraph PL["Tracker enforcement service - DETECTION NET"]
-        direction TB
-        L1["watches every item change<br/>reverts invalid activations<br/>strips self-approvals<br/>validates block schema<br/>escalation backstop<br/>detect-and-correct in seconds"]
-    end
-    ST["Tracker items = shared state<br/>labels (visible flags) + ai-first:v1 description block (data) + attributable approval history (audit)"]
-
-    SK --> ST
-    PP --> ST
-    PL --> ST
-
-    classDef state fill:#20242b,stroke:#20242b,color:#ffffff
-    class ST state
+flowchart LR
+    A["Shipped skills and helpers<br/>local verification + human review"]
+    B["Optional GitHub/Azure templates<br/>acceptance result in CI"]
+    C["Optional branch policy<br/>successful check required for merge"]
+    D["Future tracker service<br/>approval and activation enforcement"]
+    A --> B --> C
+    A -. separate implementation .-> D
 ```
 
-*Bypassing the skills (raw board edit, direct API call) lands in the plugin's net.*
+Verification remains necessary for delegate work. A required pipeline is optional.
+The CI starters run a repository-reviewed command and report its real result;
+they do not read tracker state, validate approval, post review checklists, or update
+bounce counts. See [adoption instructions](docs/pr-verification.md).
 
-### The three invariants (hard devices)
-
-| # | Invariant | Poka-yoke type / enforced by |
-|---|---|---|
-| 1 | No decomposition without an approved brief, approved by someone other than the requester | Sequence device: skill guard clause + enforcement rule R3 using the active adapter's approval identity |
-| 2 | No execution item enters Active without exactly one tier tag and a schema-valid block | Contact device: plugin rule R1 reverts the state change and comments the fix |
-| 3 | No Delegate execution item without a verification command, and the pipeline executes it before merge | Fixed-value device: skill auto-downgrade + plugin rule R2 + pipeline execution |
-
-> **Everything else stays soft by design.** Board column conventions, pair-session style, and the human right to challenge a tier are conventions, not devices. When retro data shows a recurring defect, add one small device for that specific defect - which is exactly how Toyota grew the system: device by device in response to observed failures, never as an upfront grand design.
+The [schema](skills/setup-ai-first/assets/ai-first-schema.md#5-workflow-requirements-and-optional-enforcement)
+defines the workflow requirements. Humans uphold activation and review requirements
+until the relevant automation is deployed. The enforcement service specification
+is a design for additional protection, not a condition for starting the workflow.
 
 ---
 
@@ -255,7 +248,7 @@ flowchart LR
     R1 --> A1 --> D1 --> D2 --> D3
     D1 --> G1 --> D3
 
-    PLG["Plugin spans every phase: reverts invalid activations, strips self-approvals,<br/>validates blocks, escalates after 2 bounces - always with a comment explaining the fix"]
+    PLG["Future optional tracker service:<br/>approval checks, activation correction, escalation backstop"]
 
     classDef skill fill:#efe9fa,stroke:#6d4fb3,color:#20242b
     classDef gate fill:#e2f3f1,stroke:#0f766e,color:#20242b
@@ -269,7 +262,7 @@ flowchart LR
     class PLG watch
 ```
 
-*Phases run left to right: groom, approve, decompose, execute, review. Team members never interact with the plugin directly, only see its comments.*
+*Phases run left to right: groom, approve, decompose, execute, review. Tracker-service automation is planned separately.*
 
 ### Team norms (the only part tooling cannot enforce)
 
@@ -315,19 +308,19 @@ Three norms complete the system, and they fit on an index card:
 1. Invoke `decompose-and-classify` with the regular parent item's ID. If a precondition is missing, the error message contains the exact next step - follow it.
 2. Review the summary comment the skill posts on the parent: each small execution item, its tier, and a one-line rationale.
 3. Disagree with a tier? Edit the `tier:` line and the tag on that execution item, and comment why. That is the intended mechanism, not a workaround.
-4. For anything tiered `ai-delegate`, sanity-check the `verify:` command actually proves the outcome - it will be executed as a merge precondition.
+4. For anything tiered `ai-delegate`, sanity-check the `verify:` command actually proves the outcome - run it and record the tested commit and result for review; automatic merge blocking is optional.
 
 ### How-to 5: Execute a delegate item
 
 1. Start a fresh agent session; give it only the small execution item. Everything it needs is in its context links - if it is not there, the item was decomposed badly; bounce it back rather than filling gaps from memory.
 2. The agent must honor the `stop-ask` list verbatim. Any listed condition means halt and ask, never improvise.
-3. Run the `verify:` command locally before opening the PR. A failure here is bounce material: the skill increments the counter.
-4. Open the PR linked to the execution item. The pipeline re-runs verification and posts the tier checklist for the reviewer.
-5. Second failed cycle? The item escalates to `ai-pair` automatically. Do not fight it; the escalation is the system working.
+3. Run the `verify:` command locally before opening the PR. A failure here is bounce material: explicitly invoke reclassification with the failure evidence to update the counter.
+4. Open the PR linked to the execution item. Record the local verification evidence. If optional CI is installed, link its run and tested commit too.
+5. After the second failed cycle, invoke reclassification for the prescribed escalation; no background service is shipped to do this automatically.
 
 ### How-to 6: Review a PR by tier
 
-1. Read the tier checklist comment the pipeline posted - it defines your expected depth.
+1. Read the task tier, acceptance criteria, tested commit, and verification evidence. Use the optional CI result when available.
 2. `ai-delegate`: confirm verification is green, acceptance criteria are met, and no files outside the item's scope changed. Do not line-by-line review verified mechanical work; that defeats the economics of the tier.
 3. `ai-pair`: normal peer review. The human who steered the session owns the decisions; review them as you would any colleague's.
 4. `human-only`: full-depth review per team standard.
@@ -337,14 +330,14 @@ Three norms complete the system, and they fit on an index card:
 
 ## 7. Adoption plan and metrics
 
-The framework ships in phases so that no phase depends on trust in an unproven device:
+Adopt only the stages the team has approved:
 
-| Phase | Ships | Exit signal |
+| Stage | Available behavior | Evidence to review |
 |---|---|---|
-| 1 | Both skills + the one-page trigger map; plugin in observe mode (logs and comments, never reverts) | One real feature delivered end to end; violation log reviewed |
-| 2 | PR pipeline with verify-command execution; plugin invariants 1 and 2 enforced | Zero false-positive reverts across a sprint |
-| 3 | Full enforcement + escalation backstop | Bounce data flowing into retro |
-| 4 | Telemetry dashboard: tier accuracy, bounce rates, challenge rates | First data-driven rubric adjustment |
+| Core workflow | Skills, local verification, human PR review | One real feature delivered; friction and missed checks recorded |
+| Optional CI | GitHub or Azure acceptance command reporting | Real pass/fail results on trial PRs |
+| Optional required CI | Administrator-configured merge policy | Required check runs reliably on covered PRs |
+| Future tracker service | Separately implemented monitoring/correction | Adapter acceptance tests and an observe-mode pilot |
 
 ### The metrics that matter
 
@@ -425,7 +418,7 @@ stop-ask: any change outside listed projects; new package reference; test count 
 
 1. No normal decomposition without revision-bound human brief approval under the project policy (independent by default, configured solo self-approval allowed).
 2. No Active execution item without one tier tag and a valid block.
-3. No delegate execution item without a verification command, executed at merge.
+3. No delegate execution item without a verification command executed on the completed change, with evidence reviewed by a human. Automated merge blocking is optional.
 
 Everything else is soft.
 

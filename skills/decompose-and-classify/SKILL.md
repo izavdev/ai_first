@@ -5,7 +5,7 @@ description: Break an approved AI-first brief into classified small execution it
 
 # Decompose and classify
 
-User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. Anyone who skips it is redirected deterministically by guard clauses and the enforcement layer.
+User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. The guard clauses guide this invoked session. Direct tracker edits and merges outside the workflow are not automatically blocked; tracker enforcement and required CI checks are optional, separately deployed integrations.
 
 Turns an approved brief into small execution items, each carrying its delegation tier, verification command, and execution contract. Also runs standalone in **reclassify mode** against one existing item.
 

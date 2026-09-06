@@ -5,7 +5,7 @@ description: Turn a raw ask or tracker item into an approval-ready AI-first brie
 
 # Groom
 
-User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. Anyone who skips it is redirected deterministically by guard clauses and the enforcement layer.
+User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. The guard clauses guide this invoked session. Direct tracker edits and merges outside the workflow are not automatically blocked; tracker enforcement and required CI checks are optional, separately deployed integrations.
 
 Turns a raw item into a groomed brief that a human can approve. This skill PLANS and CLARIFIES. It does not decompose, does not create small execution items, and never writes code. Its output is a brief plus labels; its exit hands off to a human approver, then to `decompose-and-classify`.
 

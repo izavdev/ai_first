@@ -145,6 +145,9 @@ For either GitHub or Linear, label creation changes an external repository or wo
 
 Do not configure, install, or authenticate tracker integrations. If the required tracker tools are unavailable, finish the local setup and report the missing integration as the next step.
 
+Do not install or activate optional CI templates or change branch policies during setup.
+Local verification and human review work without a required PR gate.
+
 ## 8. Finish
 
 Report the active tracker, the three selected terms, approval policy and any pending identity verification, and the files written. Tell the user that `groom` is ready. Explain the two-part approval rule on every tracker: a manual label plus a new human comment containing the exact brief revision and digest. Explain durable revocation through the REVOKED record.
