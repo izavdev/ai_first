@@ -359,3 +359,18 @@ Every adapter must pass the same behavioral suite:
 - Counts of 2 and above cap at Pair without weakening Human-only, including on replay.
 - Human challenges cannot waive hard overrides, missing verification, or the cap.
 - Incomplete legacy history blocks count changes while preserving existing restrictions.
+
+### Decomposition retry boundary
+
+Initial creation belongs to the skill's `ai-first-decomposition/v1` protocol, not
+the enforcement service's event idempotency store. Preserve its child provenance
+fields and parent plan/reference/intent comments. Optional Git storage resolves
+PLAN-REF to an exact repository/commit/path; it does not move progress into Git. Any future creation orchestrator must share
+those keys, discover all-state/unlinked items, and reconcile uncertain creates before
+retrying. Parent progress comments must not modify the approved brief description.
+
+Acceptance cases: a three-unit run interrupted after two creates resumes with one
+create; a lost response with an existing keyed item reuses it; a lost response with
+no visible item blocks; closed/human-edited children remain intact; competing plans
+and duplicate keys block; older-revision work needs explicit disposition. The service
+must not claim exactly-once creation where an adapter lacks atomic/idempotent support.

@@ -20,8 +20,9 @@ Use Epic / Issue / Sub-issue for large / regular / small work items.
 1. Let the skill inspect existing configuration, repository references, and available tracker tools.
 2. Confirm the tracker and all three terminology choices. For Azure DevOps, use work item types supported by the project's process template.
 3. Confirm independent approval or solo development and your canonical tracker identity. Review the installation preview. If `.ai-first/` already exists, review differences and decide how to reconcile customized files.
-4. Let the skill write the local contract files.
-5. For GitHub or Linear, review and explicitly approve creation of missing labels when prompted.
+4. Choose tracker comments (default) or a dedicated Git planning branch. For a branch, confirm the repository, naming/path convention, and durable archive destination/owner. Setup configures the option without creating or pushing branches.
+5. Let the skill write the local contract files.
+6. For GitHub or Linear, review and explicitly approve creation of missing labels when prompted.
 
 The seven workflow labels are `ai-first`, `groomed`, `brief-approved`, `ai-delegate`, `ai-pair`, `human-only`, and `ai-escalated`. GitHub creates them in the repository; Linear creates workspace-level labels. Azure DevOps needs no label bootstrap.
 
@@ -35,6 +36,7 @@ The target repository should contain:
 ├── ai-first-schema.md
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
+├── plan-storage.md
 ├── approval.py
 ├── terminology.md
 └── tracker.md
@@ -43,6 +45,15 @@ The target repository should contain:
 Check that `README.md` names the intended tracker, `terminology.md` contains the confirmed terms, and `tracker.md` is the selected adapter. Files are real copies so they remain usable independently of the skill installation.
 
 The shipped capability manifest has no enabled score-changing capabilities. Installed tools do not automatically become approved capabilities. Use [update-ai-first-capabilities](update-ai-first-capabilities.md) to review them.
+
+## Choose where plans live
+
+Use tracker comments for a simple setup, or select a dedicated branch to keep
+`plan.json`, context, and decisions together. The tracker pins the branch's exact
+commit/path and continues to own progress, child IDs, and retry history. Planning
+branches are never merged as implementation and are deleted only after completion
+and verified archival. See [plan storage options](plan-storage.md) for an example
+setup prompt and the lifecycle.
 
 ## Work as a solo developer
 

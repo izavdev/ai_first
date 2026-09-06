@@ -4,7 +4,7 @@ Use this skill to turn an approved brief into small execution items with delegat
 
 ## Before you start
 
-Run [setup-ai-first](setup-ai-first.md). All seven `.ai-first/` contract files must exist. Have tracker access and links to the relevant specs, ADRs, contracts, and repository context.
+Run [setup-ai-first](setup-ai-first.md). The `.ai-first/` contract files must exist. Have tracker access and links to the relevant specs, ADRs, contracts, and repository context.
 
 For normal decomposition, the parent must have `groomed` and `brief-approved`, attributable human approval satisfying the project policy (independent or configured solo self-approval), a valid brief schema block, and zero open decisions. Follow the [grooming guide](groom.md) to satisfy those requirements.
 
@@ -16,9 +16,41 @@ Decompose the approved brief into small execution items with dependency links.
 ```
 
 1. The skill selects normal decomposition for the brief-kind parent, then checks the parent labels, approval identity, exact revision/content digest, schema, and open decisions. It repeats approval checking before each child write. A failed guard produces a comment with remediation and stops decomposition.
-2. It splits work into one verifiable outcome per item, links source context, orders dependencies, and carries down the parent's human-only restrictions.
+2. It first checks saved plans, create intents, and existing items in all states. If a plan exists for this approved revision, it resumes that plan. Otherwise it splits work into verifiable outcomes, links context, orders dependencies, and carries down human-only restrictions.
 3. It scores each item's raw properties using the project schema, then reads the capability manifest and applicable approved metadata.
-4. It creates linked children, applies exactly one tier label to each, and posts a parent summary with tiers and rationales.
+4. It saves the complete classified plan in the configured backend (tracker comment by default, or a pinned Git planning branch), assigns stable unit keys, then creates only missing units. It reuses existing matches, repairs unambiguous missing links/labels, and reports actual progress on the parent.
+
+## Resume an interrupted decomposition
+
+Invoke the same parent again:
+
+```text
+$decompose-and-classify #123
+Resume the saved decomposition and report any incomplete links or labels.
+```
+
+The plan is saved before creating children, leaving the approved brief description
+unchanged. By default it lives in a parent comment; optional branch storage uses a
+parent PLAN-REF pointing to an exact repository/commit/path. See [plan storage](plan-storage.md). Unit IDs and keys persist across runs. A child carries
+its parent identity, approved revision/digest, and unit key in the initial create
+body, so it can be found even if hierarchy linking failed afterward.
+
+For example, if two of three children were created before interruption, the retry
+reuses those two and creates only the third. A child that is already closed or has
+human edits is preserved. Missing links or labels are repaired against the current
+item, rather than regenerating its original description or resetting bounce history.
+
+If creation timed out, its pending intent remains until the outcome is established.
+The skill searches for the exact key, including unlinked and closed items. If it
+cannot find the item, it stops for reconciliation; search absence alone does not
+prove that another create is safe. Run only one decomposition session per parent
+unless the tracker supplies safe concurrent idempotency.
+
+Duplicate keys, conflicting saved plans, and legacy or older-revision children
+require explicit review. Record which old items should be retained separately,
+superseded, or adopted after scope/provenance reconciliation. The skill never deletes
+or reopens them automatically. A revised brief does not justify silently recreating
+unfinished work from an older revision.
 
 ## Make more work delegable
 

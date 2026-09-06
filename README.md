@@ -24,7 +24,7 @@ npx skills@latest add izavdev/ai_first
 
 Select all four skills, then choose any of the supported clients offered by the installer, including GitHub Copilot, Claude Code, and Codex. The installer copies ordinary, editable skill files into the location expected by each selected client.
 
-Run `setup-ai-first` once in each target repository. It asks which tracker the project uses and what the team calls large, regular, and small work items, and whether briefs need independent approval or named solo self-approval. It then installs the shared schema, capability manifest and guide, terminology, and active adapter under `.ai-first/`. The capability manifest is project-owned and must be filled by the user or team; no score-changing capability is enabled by default. Use `update-ai-first-capabilities` to review tools, MCPs, resources, context retrieval, validators, skills, and agents before approving them. Use `groom` and `decompose-and-classify` afterward. Invoke them using the selected client's skill syntax: for example, `$setup-ai-first` in Codex or `/setup-ai-first` in Claude Code.
+Run `setup-ai-first` once in each target repository. It asks which tracker the project uses and what the team calls large, regular, and small work items, and whether briefs need independent approval or named solo self-approval. It then installs the shared schema, capability manifest and guide, terminology, and active adapter under `.ai-first/`. The capability manifest is project-owned and must be filled by the user or team; no score-changing capability is enabled by default. Use `update-ai-first-capabilities` to review tools, MCPs, resources, context retrieval, validators, skills, and agents before approving them. Setup also offers [dedicated planning branches](docs/plan-storage.md) for plan/context files, with tracker comments as the default. Use `groom` and `decompose-and-classify` afterward. Invoke them using the selected client's skill syntax: for example, `$setup-ai-first` in Codex or `/setup-ai-first` in Claude Code.
 
 Do not install the same skills both through `npx skills` and a native plugin in one client; duplicate commands and discovery entries are the likely result.
 
@@ -73,6 +73,7 @@ skills/
 │   ├── SKILL.md
 │   └── assets/
 │       ├── ai-first-schema.md
+│       ├── plan-storage.md
 │       ├── ai-first-capabilities.yml
 │       ├── capabilities-guide.md
 │       └── adapters/
@@ -148,6 +149,9 @@ python3 -m unittest discover -s tests -v
 `src/ai_first/classification.py` implements tier derivation from final scores.
 `src/ai_first/workflow.py` provides reference mode dispatch and duplicate-safe
 reclassification transitions; it does not perform tracker writes.
+`src/ai_first/decomposition.py` provides reference plan selection, stable unit keys,
+and retry reconciliation for partial creation. Tracker inventory and safe writes
+remain adapter responsibilities.
 `src/ai_first/capabilities.py` provides reference score adjustment and supervised
 trial eligibility checks. It does not authenticate evidence or promote capabilities. The
 checks cover all 81 score combinations, hard overrides, missing verification,

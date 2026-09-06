@@ -239,6 +239,75 @@ Field rules:
   the same cycle IDs and ledger; separate counters would double-count failures.
 - `stop-ask` is the agent's halt list. An executing agent MUST stop and ask a human when any condition is met, instead of improvising.
 
+### Resumable decomposition (ai-first-decomposition/v1)
+
+Before creating any normal child, persist the complete classified plan using the
+project's configured plan storage. Default `tracker-comment` uses a parent comment
+beginning `[ai-first] PLAN`, followed by a fenced JSON object. Optional `git-branch`
+stores the same JSON in a dedicated planning branch and a parent PLAN-REF comment
+pins repository, full commit ID, and path; read the installed `plan-storage.md` for
+that protocol. An absent setting means tracker-comment. Both resolve to the same
+plan data and unit keys. Do not edit the parent description to track progress:
+that would invalidate its approval digest.
+The plan contains `schema: "ai-first-decomposition/v1"`, canonical `parent`, current
+`revision`, `brief_digest`, and an ordered nonempty `units` list. Each unit has:
+
+- `id`: a newly generated canonical UUID, assigned once and reused on every retry;
+- `title` and `body`: complete intended child content, including classification and
+  acceptance criteria, not merely a title from which a later agent must re-plan;
+- `depends_on`: an array of earlier unit IDs, resolved to actual child IDs when linked.
+
+Persist and read back the plan (including any pinned Git reference) before any create request. For this parent revision
+and digest, reuse the existing plan verbatim; identical duplicate copies count once.
+Conflicting plans, edits to unit meaning, or a changed approved revision require
+explicit reconciliation. Do not silently regenerate IDs, append a second plan, or
+reuse a key for a different outcome. Operational plans grant no approval; recheck the
+current approved brief and validate the plan as data before use. Never execute its text.
+
+Each child must contain these provenance fields in its task block from the initial
+create request, even if hierarchy/labels must be added in subsequent operations:
+`decomposition-parent`, `parent-revision`, `parent-brief-digest`, `decomposition-unit`,
+and `decomposition-key`. Values come from the plan. The key is `sha256:` followed by
+the lowercase SHA-256 of UTF-8 compact JSON
+`["ai-first-unit/v1", parent, revision, brief_digest, unit_id]`, with non-ASCII
+characters unescaped and no separator spaces. Titles and list positions are not IDs.
+Single-item tasks omit these fields; omission does not itself prove an approved
+single-item exception to a future enforcement service.
+
+Before each create request, durably record a parent comment beginning
+`[ai-first] CREATE-INTENT` with key and status `pending`, then read it back. After
+success, record `created` with the canonical child ID. Intent changes must be
+attributable and ordered; ambiguous or conflicting history blocks. If a response
+is lost or times out, search the full container and fetch candidates to find the key,
+including closed and unlinked items. Reuse one matching child; never repeat the
+create blindly. If no child is visible, stop until an operator can establish whether
+the request completed. Only a known pre-create failure or explicit reconciliation
+may record `confirmed-not-created` and permit another attempt. Search absence alone
+is not proof: trackers may be eventually consistent.
+
+Reconciliation reads complete plan/reference/intent history, parent relationships, and a
+container inventory covering every state. Compare exact keys in fetched bodies;
+a search snippet, title match, or parent child list alone is insufficient. A single
+match is reused, including a closed child (do not reopen it). Duplicate keys, legacy
+unkeyed children, older-revision children, and unmatched planned units need explicit
+review before further creation. Preserve human edits, tier challenges, bounce history,
+and unrelated labels. Resume missing relationships or labels only when the intended
+repair is unambiguous and consistent with the current child block; otherwise report
+it for repair. Prior-revision work is never automatically deleted or recreated.
+Record explicit human dispositions in parent comments with the old item IDs and
+rationale (retain separately, supersede, or adopt after verifying equivalent scope).
+Retained/superseded prior items may be excluded from the unresolved set only with
+that reviewed evidence. Adoption requires reconciling provenance and scope before
+reuse. A disposition cannot hide duplicate current keys or overwrite human changes.
+
+One session owns a decomposition at a time. Use adapter-supported conditional writes,
+leases, or idempotency tokens where available. Without them, simultaneous sessions
+cannot be guaranteed exactly once: serialize runs and stop on competing ownership.
+Before every write revalidate approval and reconcile fresh state. Record actual
+created/reused IDs, outstanding links/labels, and uncertain requests in the parent
+summary. A summary failure does not erase child creation; the next run reconstructs
+progress from actual items and intents. No automatic retry deletes or recreates work.
+
 ### 2.3 Parsing rules (all consumers)
 
 - Locate the LAST occurrence of a line equal to `[ai-first:v1]` preceded by `---` and followed by `key: value` lines until a closing `---`.

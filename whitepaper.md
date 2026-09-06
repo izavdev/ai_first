@@ -114,6 +114,14 @@ The framework defines three size roles, not three mandatory issue-type names. Du
 
 For a new setup, `Epic / Issue / Sub-issue` is a useful neutral default. It is only a default. A Scrum team might choose `Epic / Story / Task`; another team might choose `Initiative / Feature / User Story`. The workflow follows the three meanings while every tracker update and user-facing message uses the configured words.
 
+### Optional planning branches
+
+Setup can store plans and supporting context on a dedicated Git branch, with
+tracker comments as the default. The tracker pins the plan's full commit ID and path;
+child status, creation intents, and failure history stay in the tracker. The planning
+branch is never merged as implementation. Preserve the plan/context in a verified
+durable archive before authorized cleanup. See [plan storage](docs/plan-storage.md).
+
 ### Why the skills are user-invoked
 
 Both workflows are deliberately *human-started*: grooming or decomposition begins because a person asks for that workflow, not because an agent silently changes the delivery state. Hosts that support explicit-only skill metadata use it; hosts such as Copilot may select a relevant skill from the user's request. In both cases, tracker mutations still occur only inside the requested workflow. During an invoked workflow, guard clauses explain missing steps. Sessions outside that workflow are not automatically redirected.

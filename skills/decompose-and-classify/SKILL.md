@@ -47,6 +47,27 @@ approval needed for subsequent execution.
 
 Failure messages ARE the process documentation. Always include the remediation step, never just the refusal.
 
+## Inspect existing decomposition before planning
+
+After normal parent guards, read complete parent plan/intent history and all related
+items using the active adapter. Read the plan-storage setting in project README
+(absent means tracker-comment). For git-branch, read `.ai-first/plan-storage.md` and
+resolve the parent's PLAN-REF to its exact repository/commit/path before validating
+the plan. Missing guide, unresolved access/archive configuration, or an unavailable
+snapshot blocks branch-backed creation. Apply the schema's Resumable decomposition protocol.
+If a saved plan exists for this approved revision/digest, resume it with its original
+unit IDs; do not decompose the brief again. Inventory must include closed and unlinked
+items. Legacy or older-revision work, duplicate keys, conflicting plans, or incomplete
+inventory blocks new creation until explicitly reconciled. Do not auto-delete,
+reopen, or duplicate existing work.
+
+If there is no saved plan and no unresolved prior work, perform decomposition and
+classification below, assign stable unit UUIDs, and persist the complete plan in the
+configured backend before any child create. Tracker-comment stores the plan inline;
+git-branch publishes the plan/context and pins its commit/path in a PLAN-REF comment.
+Read it back and check for competing sessions. Never follow a moving branch HEAD.
+Progress belongs in comments, never in the approved parent description.
+
 ## Decomposition
 
 - Each execution item must be usable in a cold agent session by someone (or something) with no conversation history. The test: could a new team member pick this up from the item alone? If not, it is missing context links, not more prose.
@@ -158,12 +179,30 @@ the item is how tiers inflate.
   summary, and continue.
   Never guess at capabilities.
 
-## Normal decomposition output per execution item
+## Normal decomposition output and resume
 
-1. Immediately before each child write, re-fetch the parent, linked brief, label, and approval records and repeat the revision/digest check against the approved snapshot used for decomposition. On change, stop and list any children already created; require renewed review. Create a child item using the configured small term, linked to the regular parent as described in `.ai-first/tracker.md`.
-2. Description: human-readable summary, acceptance criteria, then the block per schema 2.2 with all required fields, including `classes` and `capability-sources`, with `bounce: 0` and `failed-cycles: none` on new items. `stop-ask` must contain at least one condition for delegate items (e.g. "any change outside listed projects; any new package reference; test count decreases").
-3. Apply exactly one tier label.
-4. After all items: post a summary comment on the parent listing each item using the configured small term, its tier, and its one-line rationale, so gate 1's approver sees the classification outcome without opening every child.
+1. Follow the persisted plan in dependency order. Immediately before each write,
+   revalidate the parent approval snapshot and reconcile complete fresh inventory
+   against the stable unit key. Reuse an existing match, including a closed child;
+   preserve current human edits and failure history. Stop on ambiguity.
+2. For a missing unit with no unresolved attempt, record and read back a pending
+   CREATE-INTENT, then create the child with its complete task block and provenance
+   fields in the initial body. New children start `bounce: 0`, `failed-cycles: none`.
+   Record the returned canonical ID. A timeout or missing response is an uncertain
+   creation: search for the key, and never retry merely because it is not yet visible.
+3. Reconcile hierarchy, dependency links and exactly one tier label separately,
+   preserving unrelated fields. Resume missing operations on the same item rather
+   than recreating it. Use its current block/tier, not a stale planned classification,
+   if a human changed it; ambiguous or malformed states require repair.
+4. Re-fetch to confirm actual final state. Post or update a parent summary with
+   created/reused child IDs, tiers, remaining repairs, and uncertain attempts. Do not
+   report complete until all planned units are uniquely accounted for and required
+   relationships/labels are verified. Repeated runs must leave completed work alone.
+
+Shared output content remains the summary, acceptance criteria, context links, and
+schema block including raw/final scores, deltas, classes, capability sources, and
+at least one `stop-ask` for delegate items. The saved plan is a checkpoint, not
+permission to bypass current approval, classification restrictions, or review.
 
 ## Reclassify mode (existing task-kind item)
 
