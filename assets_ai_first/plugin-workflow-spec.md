@@ -1,6 +1,6 @@
 # Spec: AI-First Tracker Enforcement Service
 
-Status: draft v2 for review
+Status: draft v3 for review
 
 Depends on: [AI-first schema v1](../skills/setup-ai-first/assets/ai-first-schema.md), project-local `.ai-first/terminology.md`, and the active tracker adapter. The schema is normative; this spec does not redefine it.
 
@@ -137,9 +137,14 @@ Rules evaluate in order and return `Ok`, `Violation(MutationPlan, Comment, Data)
 
 ### R3 — Approval integrity (invariant 1)
 
-Evaluate first when approval-related state changes or when an approved regular item is revalidated.
+Evaluate first when approval-related state, requester, title, description, or linked brief content changes, or when an approved regular item is revalidated. Poll mutable linked briefs when change notifications are unavailable; never rely on a cached digest at consumption.
 
-Check: the item is currently approved and the adapter returns `Valid(actor)` for an independent human, or `SelfApproved(actor)` where the human actor matches the canonical `solo-mode` identity in the project-local schema. Resolve attribution in the adapter and apply this policy in the rule engine; adapters must not discard a self-approval before policy evaluation. Tracker-specific mechanisms may use attributable label history or a label-plus-comment protocol. Missing policy defaults to independent approval; malformed or unresolvable solo policy grants no exception. Item content cannot set policy. Record accepted solo self-approval and its identity in the audit output.
+Check: the item is currently approved and the adapter returns `Valid(actor)` for an independent human, or `SelfApproved(actor)` where the human actor matches the canonical `solo-mode` identity in the project-local schema. Resolve attribution in the adapter and apply this policy in the rule engine; adapters must not discard a self-approval before policy evaluation. Every adapter must implement schema `brief-approval/v1`: current label plus the latest
+attributable human revision/digest comment, no later revocation, verified requester
+ownership, complete history and edit metadata, and a recomputed digest of the current
+persisted snapshot including linked brief content. Independence is against that
+human requester, never an automation creator. Label history alone is insufficient.
+Legacy briefs fail closed until re-groomed and approved under the new protocol. Missing policy defaults to independent approval; malformed or unresolvable solo policy grants no exception. Item content cannot set policy. Record accepted solo self-approval and its identity in the audit output.
 
 Violation: remove `brief-approved` conditionally and post `[ai-first] REVERTED:` with the exact approval step for the active tracker and configured policy. `Unverifiable` fails closed in enforce mode and must never be treated as approval.
 
@@ -295,8 +300,20 @@ Every adapter must pass the same behavioral suite:
 3. Tier changes preserve unrelated labels, including on full-set-replacement APIs.
 4. Description round-tripping preserves human text and the tracker-specific block delimiter.
 5. Self-approval without a matching configured solo identity, missing approval history, and ambiguous approval all fail closed. A malformed solo declaration cannot grant an exception.
-6. A valid independent approval survives reprocessing. Attributable self-approval by the configured solo identity also survives; a different self-approver fails. Solo mode never substitutes for a missing label or Linear approval comment. Removing solo mode invalidates self-approval on revalidation.
+6. A valid independent approval survives reprocessing. Attributable self-approval by the configured solo identity also survives; a different self-approver fails. Solo mode never substitutes for a missing label or revision/digest approval comment. Removing solo mode invalidates self-approval on revalidation.
 7. Service-originated corrections do not loop.
 8. Polling recovery produces the same rule outcomes as webhook delivery.
 9. A forged or duplicate pipeline result cannot increment `bounce`.
 10. User-facing comments use configured terminology while stored telemetry uses semantic roles.
+
+### Revision-bound approval acceptance cases
+
+- Editing title, requester, inline brief, linked brief, or open decisions invalidates the grant.
+- Re-grooming unchanged text with a new revision rejects the old approval.
+- Label-only grants, bare markers, edited comments, missing metadata, and incomplete
+  or ambiguously ordered history fail closed on every tracker.
+- A current-revision revocation defeats approval; a later valid fresh approval restores it.
+- An automation creator cannot make the human requester an independent approver.
+- Revalidate before child writes; on concurrent change, stop and report partial work.
+- Upgrade all consumers together; older consumers ignoring the new protocol cannot
+  claim approval integrity.

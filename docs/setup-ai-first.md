@@ -35,6 +35,7 @@ The target repository should contain:
 ├── ai-first-schema.md
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
+├── approval.py
 ├── terminology.md
 └── tracker.md
 ```
@@ -70,7 +71,7 @@ For each regular item:
 
 1. Run `groom` and review the resulting destination, constraints, scope, and completion criteria.
 2. Resolve every open decision.
-3. Manually apply `brief-approved` using your configured account. In Linear, also post `[ai-first] APPROVED` yourself.
+3. Manually apply `brief-approved` using your configured account. On every tracker, also post the exact revision/digest APPROVED line supplied by grooming yourself.
 4. Invoke `decompose-and-classify`. Its parent summary records use of solo self-approval.
 
 Solo mode bypasses the need for a second person. It keeps the deliberate human
@@ -89,9 +90,14 @@ After grooming, an independent human grants approval by default. In configured s
 
 | Tracker | Approval action and evidence |
 |---|---|
-| GitHub | Apply `brief-approved`; the latest matching label event must identify an approver allowed by the project policy. |
-| Azure DevOps | Apply the `brief-approved` tag; the adding revision identifies the approver. |
-| Linear | Add `brief-approved` **and** post a comment containing `[ai-first] APPROVED`; the comment identifies the approver. |
+| GitHub | Apply the label and post the exact revision/digest APPROVED comment; its author is the approver. |
+| Azure DevOps | Apply the tag and post the exact revision/digest APPROVED comment; its author is the approver. |
+| Linear | Apply the label and post the exact revision/digest APPROVED comment; its author is the approver. |
+
+Setup now also installs `approval.py` (Python 3, no external dependencies). Upgrade
+all consumers together and re-groom existing briefs: label-only and bare-marker
+approvals cannot carry forward. See the [approval protocol](groom.md#obtain-human-approval)
+for edits, revocation, and fresh approval.
 
 No skill grants brief approval. See [grooming](groom.md#obtain-human-approval) for the handoff.
 

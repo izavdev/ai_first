@@ -2,7 +2,7 @@
 
 **A mistake-proofed workflow for software teams: groom, classify, delegate, verify**
 
-> Version 1.2 draft | September 2026
+> Version 1.3 draft | September 2026
 > Reference implementation: tracker-neutral schema with Azure DevOps, GitHub Issues, and Linear adapters; Agent Skills for GitHub Copilot, Claude Code, and Codex
 > Companion artifacts: `ai-first-schema.md`, `ai-first-capabilities.yml`, `/groom`, `/decompose-and-classify`, plugin workflow spec
 
@@ -56,7 +56,7 @@ The three delegation tiers are the heart of the system:
 flowchart TD
     A["Regular work item arrives<br/>team terminology applies"]
     B["/groom<br/>interrogation to brief + tags"]
-    C{{"Gate 1: brief sign-off<br/>approver is not the requester"}}
+    C{{"Gate 1: brief sign-off<br/>independent or configured solo approver"}}
     D["/decompose-and-classify<br/>small execution items + tier + verify command"]
     E["ai-delegate<br/>agent executes, CI verifies"]
     F["ai-pair<br/>AI drafts, human steers"]
@@ -278,7 +278,7 @@ Three norms complete the system, and they fit on an index card:
 | Norm | Why |
 |---|---|
 | Anyone may challenge a tier by editing it, with a comment saying why | The classifier is a starting point, not an authority; visible scores make challenges concrete |
-| Grooming sign-off is never self-approved | The gate exists to catch what the requester cannot see; the plugin enforces the letter, the team upholds the spirit |
+| Approval binds the reviewed brief revision | An independent human reviews by default; the configured solo human may self-approve. Every approval records the exact revision and digest |
 | Bounces are data, not blame | An escalated execution item means the classification was wrong, which is exactly the information the retro needs |
 
 ---
@@ -301,14 +301,14 @@ Three norms complete the system, and they fit on an index card:
 2. Answer the interrogation one area at a time: destination, constraints, touched surfaces, definition of done, out of scope. The skill pulls what it can from linked items and docs first, so expect only the questions it could not answer itself.
 3. For every definition-of-done criterion, the skill asks "could a machine check this?" - answer honestly; this becomes the delegation signal later.
 4. Name anything you cannot decide as an open decision and say who should decide it. Do not let the session resolve judgment calls that are not yours or its to make.
-5. The skill writes the brief into the item, tags it `groomed`, and names a suggested approver. You are done; you cannot approve your own brief.
+5. The skill writes the brief into the item, tags it `groomed`, and names a suggested approver. An independent human approves by default; the configured solo human may manually self-approve.
 
 ### How-to 3: Approve a brief (Gate 1)
 
 1. Open the item, read the brief top to bottom. You are checking one thing above all: *would a stranger know what done means?*
 2. Check the open-decisions count in the `[ai-first:v1]` block. If it is above zero, decomposition is blocked anyway - resolve the decisions with the requester first or send it back.
 3. Scan the touched-surfaces list for anything missing that you know about (that knowledge gap is why this gate exists).
-4. Grant `brief-approved` using the active tracker adapter. Azure DevOps attributes the tag through revisions; GitHub attributes the label through issue events; Linear requires both the label and an `[ai-first] APPROVED` comment. That attributable record is the audit.
+4. On every tracker, grant `brief-approved` and post the exact `[ai-first] APPROVED revision=<brief-revision> digest=<brief-digest>` line supplied by grooming. Review the persisted brief and its verified human requester first. The attributable comment binds the item, revision, requester, title, brief, and linked brief content. Edits invalidate content equality; re-grooming changes the revision even for identical text. Use the corresponding REVOKED record plus label removal for durable revocation.
 
 ### How-to 4: Decompose and classify
 
@@ -423,7 +423,7 @@ stop-ask: any change outside listed projects; new package reference; test count 
 
 ### Invariants
 
-1. No decomposition without independent brief approval.
+1. No normal decomposition without revision-bound human brief approval under the project policy (independent by default, configured solo self-approval allowed).
 2. No Active execution item without one tier tag and a valid block.
 3. No delegate execution item without a verification command, executed at merge.
 

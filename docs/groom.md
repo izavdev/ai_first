@@ -57,11 +57,29 @@ The item description, or its linked brief document, should contain Destination, 
 
 ## Obtain human approval
 
-Have a human review the brief and resolve all open decisions before approving. By default, the approver must differ from the item creator. If setup configured your solo identity, you may review and approve your own brief using that account. See [solo setup](setup-ai-first.md#work-as-a-solo-developer). The skill never applies `brief-approved`.
+Have a human review the brief and resolve all open decisions before approving. By default, the approver must differ from the verified human requester, even when an automation account created the item. If setup configured your solo identity, you may review and approve your own brief using that account. See [solo setup](setup-ai-first.md#work-as-a-solo-developer). The skill never applies `brief-approved`.
 
-- **GitHub:** the approver applies `brief-approved`. Classification checks the latest matching label event's actor.
-- **Azure DevOps:** the approver adds the `brief-approved` tag. Classification checks the work-item revision that added it.
-- **Linear:** the approver adds `brief-approved` and posts a comment containing the literal marker `[ai-first] APPROVED`. Both are required.
+On **all three trackers**, review the current persisted brief and confirm its human
+requester. Apply `brief-approved` manually and post the exact line supplied by grooming:
+
+```text
+[ai-first] APPROVED revision=<brief-revision> digest=<brief-digest>
+```
+
+Replace the placeholders with the values supplied for this brief. Do not edit an
+old comment or use a bare `[ai-first] APPROVED` marker. The digest includes the
+linked brief content, not merely its URL. The approver is the comment's verified
+human author; the latest record for the current revision must be valid.
+
+Any covered content change blocks decomposition until re-grooming and fresh approval.
+Re-grooming generates a new revision even for identical text. To revoke durably,
+post `[ai-first] REVOKED revision=<brief-revision> digest=<brief-digest>` and remove
+the label. Label removal blocks while absent; adding it back on an unchanged revision
+can restore the same approval unless a revocation was recorded.
+
+Old briefs must be re-groomed after setup installs the new schema, adapter, and
+`approval.py`. Missing identity, complete history, edit metadata, or linked content
+blocks approval checking rather than accepting a stale grant.
 
 Then explicitly invoke [decompose-and-classify](decompose-and-classify.md) with the item ID.
 

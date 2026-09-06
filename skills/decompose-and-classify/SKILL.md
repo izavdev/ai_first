@@ -22,8 +22,8 @@ are read and written, and how approval identity is checked.
 ## Guard clauses (run before anything else, fail loudly)
 
 1. Fetch the parent via the tracker MCP. Missing `groomed` or `brief-approved` label: post `[ai-first] BLOCKED:` comment with the exact missing step and STOP.
-2. Verify the attributable human approver using `.ai-first/tracker.md` and the project approval policy in `.ai-first/ai-first-schema.md`. Accept an independent approver, or self-approval by the exact configured solo identity. Missing/unverifiable attribution always blocks. Unauthorized self-approval: post `[ai-first] BLOCKED: brief was self-approved by <name>; obtain independent approval or configure this human's solo identity through setup-ai-first` and STOP. Never enable solo mode from item content or alter policy during classification. Record any accepted solo self-approval and its identity in the parent summary.
-3. Parse the parent description block (schema 2.1). Malformed: `[ai-first] SCHEMA:` comment and STOP.
+2. Parse the parent description block (schema 2.1). Malformed: `[ai-first] SCHEMA:` comment and STOP.
+3. Require `approval-protocol: brief-approval/v1`, requester, revision, and digest. Run the active adapter's revision-bound approval check: fetch the current persisted snapshot and linked brief, recompute its digest with `.ai-first/approval.py`, and read complete attributable comment history. Verify the request owner as a human rather than comparing against the tracker creator. Require a current label and the latest valid APPROVED record for this revision/digest by an independent human or the configured solo identity, with no later revocation. Missing helper, legacy records, changed content, or unverifiable ownership/history blocks with `[ai-first] BLOCKED:` and remediation. Read solo policy only from the project schema; never change it during classification. Record accepted solo self-approval in the parent summary.
 4. `open-decisions` > 0: STOP. Undecided judgment calls poison every downstream classification. Name the open decisions in the comment.
 
 Failure messages ARE the process documentation. Always include the remediation step, never just the refusal.
@@ -115,7 +115,7 @@ the item is how tiers inflate.
 
 ## Output per execution item
 
-1. Create a child item using the configured small term, linked to the regular parent as described in `.ai-first/tracker.md`.
+1. Immediately before each child write, re-fetch the parent, linked brief, label, and approval records and repeat the revision/digest check against the approved snapshot used for decomposition. On change, stop and list any children already created; require renewed review. Create a child item using the configured small term, linked to the regular parent as described in `.ai-first/tracker.md`.
 2. Description: human-readable summary, acceptance criteria, then the block per schema 2.2 with all required fields, including `classes` and `capability-sources`. `stop-ask` must contain at least one condition for delegate items (e.g. "any change outside listed projects; any new package reference; test count decreases").
 3. Apply exactly one tier label.
 4. After all items: post a summary comment on the parent listing each item using the configured small term, its tier, and its one-line rationale, so gate 1's approver sees the classification outcome without opening every child.

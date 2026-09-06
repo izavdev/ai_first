@@ -17,7 +17,7 @@ The shared contract between the `groom` skill, the `decompose-and-classify` skil
 Rules:
 - A small execution item carries exactly one tier tag. Consumers treat multiple tier tags as a schema violation.
 - Tags are flags only. Never encode data in tag names.
-- Approval identity is not stored in the description block. It is derived using the active tracker adapter's auditable history mechanism. Consumers MUST verify the granting identity against the project approval policy below.
+- Approval identity is not stored in the description block. It is derived using the active tracker adapter's attributable approval comment history. Consumers MUST verify the granting identity against the project approval policy below.
 - Display names for large, regular, and small items come from `.ai-first/terminology.md`. These names do not change schema keys or classification semantics.
 
 ### Project approval policy
@@ -29,16 +29,16 @@ solo-mode: false
 ```
 
 `false` (or an absent declaration in an older installation) requires an approver
-other than the item creator. To allow a sole developer to approve their own briefs,
+other than the verified human requester recorded as `requester:`. To allow a sole developer to approve their own briefs,
 setup replaces `false` with one quoted, canonical tracker identity, for example
 `solo-mode: "octocat"` for a GitHub login. Use the identity returned by approval
 history: GitHub login, Azure DevOps identity ID, or Linear user ID; never a display
 name. Compare using the tracker's canonical identity semantics.
 
-An attributable human approval is valid when its actor differs from the creator,
+An attributable human approval is valid when its actor differs from that requester,
 or when its actor equals the configured solo identity. Solo mode waives only the
 independent-person requirement. The human still reviews the brief and manually
-grants `brief-approved`; Linear also requires its approval comment. Skills never
+grants `brief-approved` and posts the revision-bound approval record below. Skills never
 grant approval. Grooming, zero open decisions, classification overrides,
 verification, and bounce escalation still apply.
 
@@ -60,6 +60,10 @@ A fenced block at the END of the work item description. Plain visible text, no H
 ---
 [ai-first:v1]
 kind: brief
+approval-protocol: brief-approval/v1
+brief-revision: <new canonical UUID>
+requester: <verified canonical human identity>
+brief-digest: sha256:<computed digest>
 brief-url: <link to wiki page or "inline">
 groomed-on: 2026-08-03
 open-decisions: 0
@@ -68,6 +72,94 @@ open-decisions: 0
 
 If `brief-url: inline`, the groomed brief is the description content above the block.
 `open-decisions` counts unresolved judgment calls surfaced during grooming. Decomposition MUST refuse when > 0.
+
+### Revision-bound approval (brief-approval/v1)
+
+This approval protocol is mandatory for normal decomposition on every tracker.
+Legacy briefs and approvals without these fields must be re-groomed and manually
+approved again. The `[ai-first:v1]` sentinel remains a description format version;
+older consumers do not enforce this protocol. Upgrade every consumer together.
+
+Required brief fields in addition to section 2.1:
+
+- `approval-protocol: brief-approval/v1`
+- `brief-revision:` a new lowercase canonical UUID generated at every grooming or
+  re-grooming, even if the text is identical. Never reuse an earlier revision.
+- `requester:` the canonical identity of the human who owns the request. Resolve
+  it through tracker identity tools and confirm with that human during grooming;
+  never substitute an automation creator, assignee, or guessed identity. The
+  reviewer must confirm this ownership before approving. If ownership cannot be
+  established, approval fails closed. Changing it requires re-grooming.
+- `brief-digest: sha256:<64 lowercase hex digits>` computed from the persisted
+  snapshot, not from the pre-write Markdown or by the language model itself.
+
+Use the installed `approval.py` helper with a JSON payload containing exactly:
+`item`, `revision`, `requester`, `title`, `description`, `brief_url`,
+`linked_content`, `groomed_on`, `open_decisions`.
+
+`item` is the adapter's canonical tracker/container/item identity. `revision`,
+`requester`, `brief_url`, and `groomed_on` are the corresponding block values.
+`description` is the complete persisted human text before the schema block,
+including the source ask and any scope/constraints; `title` is the persisted item
+title. `linked_content` is null for `inline`; otherwise it is the full freshly
+fetched brief document content. The adapter must decode these values consistently.
+Unavailable or incompletely fetched content blocks approval; never hash just a URL.
+Referenced documents that define the approved requirements must be included in that
+snapshot or pinned to immutable versions in it. Do not follow mutable requirement
+links at execution time as if their new contents had been approved.
+
+Canonical bytes are UTF-8 of the compact JSON array
+`["ai-first-brief/v1", item, revision, requester, title, description, brief_url,
+linked_content, groomed_on, open_decisions]`, with non-ASCII characters unescaped
+and no separator spaces. Normalize CRLF and CR to LF only in title, description,
+and linked content; preserve all other whitespace and Unicode. Hash with SHA-256
+and prepend `sha256:`. The stored digest and approval comments are excluded.
+
+After reviewing this snapshot, the human applies `brief-approved` and posts a new
+comment consisting of exactly one line (substitute actual values):
+
+```text
+[ai-first] APPROVED revision=<brief-revision> digest=<brief-digest>
+```
+
+All trackers use the comment author as the approver. A label alone, a bare marker,
+a quoted example, an edited approval comment, or a digest copied from an older
+revision is not approval. Skills may show the line for the human to post but must
+never post it on the human's behalf or apply the approval label.
+
+At every consumption, fetch the complete comment history and current brief,
+resolve requester and comment author identities as humans, and recompute the digest.
+The current label, stored digest, recomputed digest, and approval record must agree;
+`open-decisions` must be zero. Consider exact protocol comments in creation order.
+Ignore legacy bare markers and well-formed records for other revisions; they can
+remain as historical audit data but grant nothing for this revision. For the current
+revision, the latest record wins; it must be APPROVED with the
+current digest and an actor satisfying the project policy. A later unauthorized
+approval or wrong digest cannot fall back to an earlier valid grant. Malformed revision-bearing protocol records, and edited, nonhuman, or
+unattributable records for the current revision, block until repaired (remove
+or correct the offending record with an auditable tracker operation, then post a
+fresh approval). Ambiguous order or incomplete history always blocks.
+
+To revoke, a verified human posts exactly:
+
+```text
+[ai-first] REVOKED revision=<brief-revision> digest=<brief-digest>
+```
+
+Then remove the label. Any human revocation for the current revision invalidates
+its grant until a later valid approval. Removing the label alone blocks use while
+absent; it does not erase an approval record. Restoring a label on an unchanged
+revision can restore validity, so durable revocation requires the REVOKED record.
+Re-grooming removes the label first and creates a fresh revision, which prevents
+old comments from being reused even if the original text is restored.
+
+Any title, requester, brief, linked content, date, or open-decision edit changes the
+digest and blocks use until re-grooming and fresh approval. Exact restoration of a
+snapshot within the same revision restores content equality; use revocation or
+re-grooming when the old grant must remain invalid. Re-fetch and compare snapshots
+and approval state immediately before creating each child. If anything changes,
+stop, report children already created, and require fresh review; do not claim
+atomic enforcement across tracker operations that cannot provide it.
 
 ### 2.2 On each small execution item (written by `decompose-and-classify`)
 

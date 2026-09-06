@@ -4,7 +4,7 @@ Use this skill to turn an approved brief into small execution items with delegat
 
 ## Before you start
 
-Run [setup-ai-first](setup-ai-first.md). All six `.ai-first/` contract files must exist. Have tracker access and links to the relevant specs, ADRs, contracts, and repository context.
+Run [setup-ai-first](setup-ai-first.md). All seven `.ai-first/` contract files must exist. Have tracker access and links to the relevant specs, ADRs, contracts, and repository context.
 
 For normal decomposition, the parent must have `groomed` and `brief-approved`, attributable human approval satisfying the project policy (independent or configured solo self-approval), a valid brief schema block, and zero open decisions. Follow the [grooming guide](groom.md) to satisfy those requirements.
 
@@ -15,7 +15,7 @@ $decompose-and-classify #123
 Decompose the approved brief into small execution items with dependency links.
 ```
 
-1. The skill checks the parent labels, approval identity, schema, and open decisions. A failed guard produces a comment with remediation and stops decomposition.
+1. The skill checks the parent labels, approval identity, exact revision/content digest, schema, and open decisions. It repeats approval checking before each child write. A failed guard produces a comment with remediation and stops decomposition.
 2. It splits work into one verifiable outcome per item, links source context, orders dependencies, and carries down the parent's human-only restrictions.
 3. It scores each item's raw properties using the project schema, then reads the capability manifest and applicable approved metadata.
 4. It creates linked children, applies exactly one tier label to each, and posts a parent summary with tiers and rationales.
@@ -91,7 +91,7 @@ To challenge a tier manually, a human can edit both the `tier` field and matchin
 
 | Situation | Next step |
 |---|---|
-| Missing or unauthorized self-approval | Obtain independent approval, or use setup to configure your verified solo identity and manually approve. Linear requires the label and approval comment in both modes. |
+| Missing or unauthorized self-approval | Obtain independent approval, or use setup to configure your verified solo identity and manually approve. Every tracker requires the label and exact revision/digest approval comment in both modes. |
 | Open decisions remain | Resolve them in the brief and keep its count accurate before retrying. |
 | Schema is malformed | Repair the rule named in the `[ai-first] SCHEMA:` comment. Use the active adapter's storage format, including Linear's fenced block. |
 | No valid verification command exists | Accept a non-delegate classification or improve verification before reclassifying. |

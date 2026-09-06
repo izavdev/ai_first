@@ -100,20 +100,28 @@ manifest. This prevents an installed skill from declaring itself proven.
 During `setup-ai-first`, select solo development and confirm your canonical tracker
 identity. Setup records `solo-mode: "<your-tracker-identity>"` in the project's
 `.ai-first/ai-first-schema.md`. You can then review and manually approve your own
-briefs. Approval labels, Linear's approval comment, and downstream checks still
+briefs. Approval labels, revision-bound approval comments, and downstream checks still
 apply. Existing projects can rerun setup to reconcile their schema and adapter.
 See [working as a solo developer](docs/setup-ai-first.md#work-as-a-solo-developer).
 
 ## Tracker approval mechanisms
 
-On GitHub, `brief-approved` is attributed through the issue event history. The latest event for that label must be a `labeled` event whose actor satisfies the project approval policy: independent by default, or the configured solo developer.
+Every tracker requires both the `brief-approved` label/tag and a new human comment:
 
-Linear approval has two parts:
+```text
+[ai-first] APPROVED revision=<brief-revision> digest=<brief-digest>
+```
 
-1. Add the `brief-approved` label.
-2. Add a comment containing `[ai-first] APPROVED`.
+Grooming provides the exact line after hashing the persisted brief with the installed
+`approval.py` helper. Review the brief and requester identity before posting it.
+Approval binds the item, revision, requester, title, brief text, and linked brief
+content. Changes block decomposition; re-grooming always creates a new revision.
+The latest record for that revision must be a valid approval. To revoke durably,
+post the corresponding `REVOKED` record and remove the label.
 
-The comment supplies the approver identity that Linear's label mutation API does not expose. Azure DevOps derives that identity from work-item revisions and does not need the extra comment.
+Upgrade the schema, helper, adapter, and all consumers together through setup.
+Existing briefs require re-grooming and fresh approval; old labels and bare markers
+do not satisfy `brief-approval/v1`. See [approval instructions](docs/groom.md#obtain-human-approval).
 
 ## Development
 
@@ -127,7 +135,7 @@ python3 -m unittest discover -s tests -v
 
 `src/ai_first/classification.py` implements tier derivation from final scores. The
 checks cover all 81 score combinations, hard overrides, missing verification,
-invalid inputs, and agreement with the truth table embedded in the installed
+invalid inputs, approval digests and revocation, and agreement with the truth table embedded in the installed
 schema. This reference function does not score tasks, validate command coverage,
 or enforce tracker or PR state.
 

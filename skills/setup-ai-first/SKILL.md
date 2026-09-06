@@ -77,6 +77,7 @@ Show the proposed tracker, approval policy (and solo identity if selected), and 
 ├── ai-first-schema.md
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
+├── approval.py
 ├── terminology.md
 └── tracker.md
 ```
@@ -84,6 +85,7 @@ Show the proposed tracker, approval policy (and solo identity if selected), and 
 The source files shipped with this skill are:
 
 - [assets/ai-first-schema.md](assets/ai-first-schema.md)
+- [assets/approval.py](assets/approval.py)
 - [assets/ai-first-capabilities.yml](assets/ai-first-capabilities.yml)
 - [assets/capabilities-guide.md](assets/capabilities-guide.md)
 - the selected file under `assets/adapters/`
@@ -124,6 +126,13 @@ The large item contains multiple independently groomed regular items. The regula
 
 Use real file copies, not symlinks. Plugin caches and cross-agent skill installers may not preserve symlinks.
 
+Install `approval.py` as a real copy alongside the schema. It requires Python 3
+and no external packages. On upgrades, reconcile schema, helper, and active adapter
+together. Explain that every consumer must support `brief-approval/v1`; existing
+briefs need re-grooming and fresh approval, and label-only/bare-marker grants are
+not migrated automatically. Preserve historical comments for audit. Do not grant
+approval or rewrite historical grants during setup.
+
 ## 7. Tracker bootstrap
 
 Read the selected adapter's label-bootstrap section.
@@ -138,4 +147,4 @@ Do not configure, install, or authenticate tracker integrations. If the required
 
 ## 8. Finish
 
-Report the active tracker, the three selected terms, approval policy and any pending identity verification, and the files written. Tell the user that `groom` is ready. Call out Linear's two-part approval rule when Linear was selected, or GitHub's label-event approval check when GitHub was selected.
+Report the active tracker, the three selected terms, approval policy and any pending identity verification, and the files written. Tell the user that `groom` is ready. Explain the two-part approval rule on every tracker: a manual label plus a new human comment containing the exact brief revision and digest. Explain durable revocation through the REVOKED record.
