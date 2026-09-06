@@ -1,0 +1,17 @@
+{
+  "schema": "ai-first-assets/v1",
+  "package_version": "0.4.0",
+  "sources": {
+    "skills/setup-ai-first/SKILL.md": "sha256:1afd61170f68663cdbe697848bc0cf3be695f6a1d889fe045106bb2c8105f929",
+    "skills/setup-ai-first/assets/adapters/ado.md": "sha256:4ac7728e912ee0adb3eca25ca16d7f91c83f876dfb07261feff5621e465791d7",
+    "skills/setup-ai-first/assets/adapters/github.md": "sha256:c000f47e6cce7eb3c90524a4145ee86799f9838a69ec6f754bef3c7be71ed271",
+    "skills/setup-ai-first/assets/adapters/linear.md": "sha256:a02e278ab772be81018cd60d254ab606e9c73744bdd0219b4a289187965ee65d",
+    "skills/setup-ai-first/assets/ai-first-capabilities.yml": "sha256:6107ed46a4641381a6e4483bfb95888ab99b148a444297d3887fb6afc53aeeaf",
+    "skills/setup-ai-first/assets/ai-first-schema.md": "sha256:a1c43e491a5a9736f44e367f38a4b089c56c9c5c9ee4182044488fe586ac288d",
+    "skills/setup-ai-first/assets/approval.py": "sha256:cd6e4c8caa61571b5b41660700c2ae9cdde4d7a6bb55449de31539b2caa8b808",
+    "skills/setup-ai-first/assets/capabilities-guide.md": "sha256:947a1f748798db59c084a76977687a757962698e5c1b5bf6f0afe87d22c3760c",
+    "skills/setup-ai-first/assets/classification-cases.csv": "sha256:e3315600654bc013808c097a47a06009c6fa165a92711435610a6178a1aa30db",
+    "skills/setup-ai-first/assets/plan-storage.md": "sha256:99dfd86769841b9b9e45d587e4d5587651ef901a5fb32ea70f966cbb8bfbea61",
+    "skills/setup-ai-first/assets/workflow-contract.json": "sha256:0353e183bb538b66d3524b2f1dbfd90c4f6c1a7902d59f01d824d2d0d46f3888"
+  }
+}

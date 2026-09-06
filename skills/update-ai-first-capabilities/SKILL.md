@@ -21,6 +21,7 @@ Establish whether the user wants to:
 - register or revise an inline capability under `capabilities`;
 - create or revise `ai-first-capability.yml` beside a custom skill's `SKILL.md`;
 - approve, disable, or reconcile discovered skill metadata under `approvals`;
+- plan or review a supervised capability trial;
 - promote a provisional entry to proven or demote a proven entry;
 - change discovery roots or execution profiles.
 
@@ -100,11 +101,27 @@ New or materially changed capabilities start `provisional`, even when the user
 approves their registration. Provisional entries are visible but do not change
 scores.
 
-Promote to `proven` only with recorded telemetry meeting manifest invariant C5:
-at least 10 merged delegate tasks in every approved covered class with zero
-escalations. Documentation, demos, confidence, and successful non-delegate tasks
-do not substitute for this evidence. Apply invariant C6 and recommend demotion
-when the recorded escalation rate exceeds 20% over the last 20 covered tasks.
+Read the installed guide's **Supervised evaluation before promotion** section for
+trial design, record shape, evidence, and C5/C6 thresholds. Plan or review a trial
+without executing the candidate unless the user has authorized that evaluation.
+Keep the task's real tier and hard restrictions; experimental scores do not upgrade
+execution. Pair tasks qualify, and permitted human-only research can be evaluated
+without delegating prohibited work.
+
+Promote only after reviewing the latest ten completed supervised trials on distinct
+tasks per covered class and exact version, all passing with actual-use evidence
+and isolated +1 improvement on each proposed axis. Check baseline/observed scores,
+prerequisites, outputs, confounders, and human interventions. Keep failures and
+inconclusive trials in the history; do not select only successful examples. Narrow
+unsupported coverage/effects or leave them provisional. The threshold is an initial
+operational criterion, not proof of reliability.
+
+Review current availability and the guide's ongoing-use window before retaining
+proven status. At five or more failures in twenty completed uses per class/version,
+propose demotion and suspend score effects pending review. Serious coverage defects
+suspend effects even with fewer samples. Missing evidence or unknown prerequisites
+never grants an uplift. Existing proven entries require reconciliation with this
+policy before further use; preserve historical records.
 
 For custom skill metadata:
 

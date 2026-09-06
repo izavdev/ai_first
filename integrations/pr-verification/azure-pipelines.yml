@@ -1,0 +1,19 @@
+# Copy to azure-pipelines-ai-first.yml only when ready to opt in.
+# Azure Repos PR builds are queued by a branch Build validation policy, not `pr:`.
+# Start with manual runs; later choose an Optional policy, then Required if approved.
+trigger: none
+pr: none
+pool:
+  vmImage: ubuntu-latest
+jobs:
+  - job: verify
+    displayName: AI-first acceptance
+    timeoutInMinutes: 30
+    steps:
+      - checkout: self
+        clean: true
+        persistCredentials: false
+      # Add your approved runtime and dependency setup steps here.
+      # Do not map System.AccessToken or deployment credentials into this job.
+      - script: python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json --check acceptance
+        displayName: Run acceptance verification

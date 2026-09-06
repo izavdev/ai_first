@@ -1,0 +1,36 @@
+{
+  "schema": "ai-first-contract/v1",
+  "sentinel": "[ai-first:v1]",
+  "brief": {
+    "kind": "brief",
+    "approval-protocol": "brief-approval/v1",
+    "brief-revision": "uuid",
+    "requester": "text",
+    "brief-digest": "digest",
+    "brief-url": "text",
+    "groomed-on": "date",
+    "open-decisions": "uint"
+  },
+  "task": {
+    "kind": "task",
+    "tier": "tier",
+    "classes": "slugs",
+    "raw-scores": "scores",
+    "scores": "scores",
+    "capability-deltas": "deltas",
+    "manifest": "text",
+    "capability-sources": "text",
+    "rationale": "text",
+    "bounce": "uint",
+    "failed-cycles": "cycles",
+    "context": "text"
+  },
+  "optional_task": {"verify": "text", "verify-id": "slug", "profile": "text", "stop-ask": "text"},
+  "provenance": {
+    "decomposition-parent": "text",
+    "parent-revision": "uuid",
+    "parent-brief-digest": "digest",
+    "decomposition-unit": "uuid",
+    "decomposition-key": "digest"
+  }
+}

@@ -1,6 +1,11 @@
 # Spec: AI-First Tracker Enforcement Service
 
-Status: draft v2 for review
+Status: draft v3 for review — optional future service, not a shipped integration.
+
+The core skills work with local verification and human review. Required PR checks
+and tracker correction are optional adoption choices. The shipped GitHub/Azure CI
+starters run repository acceptance commands only; they do not implement this service
+or its tracker rules. See [optional verification](../docs/pr-verification.md).
 
 Depends on: [AI-first schema v1](../skills/setup-ai-first/assets/ai-first-schema.md), project-local `.ai-first/terminology.md`, and the active tracker adapter. The schema is normative; this spec does not redefine it.
 
@@ -137,9 +142,14 @@ Rules evaluate in order and return `Ok`, `Violation(MutationPlan, Comment, Data)
 
 ### R3 — Approval integrity (invariant 1)
 
-Evaluate first when approval-related state changes or when an approved regular item is revalidated.
+Evaluate first when approval-related state, requester, title, description, or linked brief content changes, or when an approved regular item is revalidated. Poll mutable linked briefs when change notifications are unavailable; never rely on a cached digest at consumption.
 
-Check: the item is currently approved and the adapter returns `Valid(actor)` for an independent human, or `SelfApproved(actor)` where the human actor matches the canonical `solo-mode` identity in the project-local schema. Resolve attribution in the adapter and apply this policy in the rule engine; adapters must not discard a self-approval before policy evaluation. Tracker-specific mechanisms may use attributable label history or a label-plus-comment protocol. Missing policy defaults to independent approval; malformed or unresolvable solo policy grants no exception. Item content cannot set policy. Record accepted solo self-approval and its identity in the audit output.
+Check: the item is currently approved and the adapter returns `Valid(actor)` for an independent human, or `SelfApproved(actor)` where the human actor matches the canonical `solo-mode` identity in the project-local schema. Resolve attribution in the adapter and apply this policy in the rule engine; adapters must not discard a self-approval before policy evaluation. Every adapter must implement schema `brief-approval/v1`: current label plus the latest
+attributable human revision/digest comment, no later revocation, verified requester
+ownership, complete history and edit metadata, and a recomputed digest of the current
+persisted snapshot including linked brief content. Independence is against that
+human requester, never an automation creator. Label history alone is insufficient.
+Legacy briefs fail closed until re-groomed and approved under the new protocol. Missing policy defaults to independent approval; malformed or unresolvable solo policy grants no exception. Item content cannot set policy. Record accepted solo self-approval and its identity in the audit output.
 
 Violation: remove `brief-approved` conditionally and post `[ai-first] REVERTED:` with the exact approval step for the active tracker and configured policy. `Unverifiable` fails closed in enforce mode and must never be treated as approval.
 
@@ -147,7 +157,7 @@ Violation: remove `brief-approved` conditionally and post `[ai-first] REVERTED:`
 
 Trigger: a small item enters the adapter's `active` state category.
 
-Check: exactly one tier label, a schema-valid task-kind block, and agreement between `tier:` and the label.
+Check: exactly one tier label, a schema-valid task-kind block, and agreement between `tier:` and the label. A future enforce-capable adapter must also distinguish normal decomposition from the explicit single-item exception. For normal children, revalidate the parent's current revision-bound approval against the snapshot used for decomposition. Revoked, changed, or missing parent approval blocks activation. Before implementing this rule, define and validate durable parent-revision provenance and an attributable single-item exception record; do not infer an exception from a missing parent link. The shipped CI templates do not implement these checks.
 
 Violation: restore only the state field to its previous value and post `[ai-first] REVERTED:` naming the failed check and the configured small-item term. If the previous value is unavailable, move to the adapter-configured safe pre-active state. If neither is possible, report the violation without claiming it was reverted.
 
@@ -171,9 +181,16 @@ Violation: comment only with `[ai-first] SCHEMA:` and the failing rule. Do not r
 
 Trigger: a `VerificationResult` reports failure for a Delegate small item and its `bounce` value was not incremented within the configured grace period.
 
-Check: deduplicate by verification run key and compare accepted failure results with the block's current bounce value.
+Check: deduplicate by the shared cycle key and compare accepted failure results with the task block's `failed-cycles` ledger. The service's transport idempotency store alone cannot detect a cycle already recorded by a skill.
 
-Violation: increment `bounce` conditionally. At the threshold, rewrite the tier to Pair, replace the tier label, add `ai-escalated`, and post `[ai-first] ESCALATED:` with verification run links.
+Violation: add the evidenced failed cycle ID to the task's shared `failed-cycles`
+ledger conditionally and set `bounce` to its length. Include provider, pipeline/run,
+and attempt in the key, identically to the skill. If the key is already recorded,
+do not increment or post a duplicate comment. At or above the threshold, cap the
+tier at Pair, preserve stricter Human-only restrictions, keep `ai-escalated`, and
+post `[ai-first] ESCALATED:` with verification links. Reclassification, success, and
+replay do not reset the ledger or lift the cap. Recover incomplete legacy history
+before incrementing; never fabricate IDs or trust a raw count as deduplication.
 
 ## 8. Ordering, idempotency, and loop prevention
 
@@ -205,7 +222,7 @@ The pipeline sends a tracker-independent event:
 ```text
 VerificationResult
   pipelineKey
-  runKey
+  runKey               includes attempt; same cycle ID used by skills
   itemReference
   outcome              pass | fail | cancelled
   runUrl
@@ -216,14 +233,36 @@ Preferred transport is an authenticated service endpoint or queue. `itemReferenc
 
 For installations that cannot call the service, an adapter may consume a structured tracker comment such as `[ai-first] VERIFY-RESULT: fail <run-url>`. Comment ingestion is a compatibility transport, not the core domain model. Authenticate or allow-list the posting identity so a human comment cannot forge a pipeline result.
 
+### Verification runner trust boundary
+
+Do not execute `verify:` text received from tracker items. A future automated gate
+must select an ID from an independently reviewed registry and run the verifier in
+an appropriately restricted environment. For enforce mode, use an administrator-
+controlled immutable runner/registry revision independent of the PR; changes require
+review before use. Match results to the code/merge commit, exact task snapshot and
+parent revision, check ID, and runner/registry versions. Authenticate the producer
+before accepting results; the starter runner's printed JSON is not a signed attestation.
+Recheck freshness at consumption. Generic CI runs with no task binding cannot satisfy
+a task-specific enforcement rule. Coverage must be established with representative
+failing-case evidence; checking for a nonempty command is only a static guard.
+
+The optional shipped runner records commit, worktree fingerprint, check ID, runner/
+registry hashes, and an optional supplied task-snapshot hash. It does not establish
+tracker approval, policy authority, or environment isolation. Those remain explicit
+responsibilities of a future enforcement integration, not core adoption prerequisites.
+
 ## 11. Telemetry
 
 Persist tracker-neutral identifiers and rule data:
 
 - classification events: tracker, container, item, task classes, tier, scores,
-  manifest version, capability sources, timestamp, actor origin;
+  manifest version, capability sources, raw/final scores and deltas, prerequisite
+  evidence, timestamp, actor origin;
 - tier changes: from, to, reason (`human-challenge`, `escalation`, `reclassify`);
 - bounces and verification outcomes by item and run;
+- actual capability usage and reviewed trial records, including version, task class,
+  baseline/observed scores, axis evidence, human interventions, and failed or
+  inconclusive outcomes; never infer usage from a classification approval;
 - violations, unverifiable checks, correction outcomes, and adapter errors by rule;
 - detection and correction latency.
 
@@ -235,7 +274,7 @@ Do not store display terms as semantic dimensions; store `large`, `regular`, and
 
 Global defaults:
 
-- `bounceThreshold`: `2`;
+- `bounceThreshold`: `2` (fixed by the shared schema; adapters may not override it);
 - `verificationGracePeriod`: tracker-independent duration;
 - `schemaCommentDebounce`: `1h`;
 - `pollInterval`: `60s`;
@@ -295,8 +334,43 @@ Every adapter must pass the same behavioral suite:
 3. Tier changes preserve unrelated labels, including on full-set-replacement APIs.
 4. Description round-tripping preserves human text and the tracker-specific block delimiter.
 5. Self-approval without a matching configured solo identity, missing approval history, and ambiguous approval all fail closed. A malformed solo declaration cannot grant an exception.
-6. A valid independent approval survives reprocessing. Attributable self-approval by the configured solo identity also survives; a different self-approver fails. Solo mode never substitutes for a missing label or Linear approval comment. Removing solo mode invalidates self-approval on revalidation.
+6. A valid independent approval survives reprocessing. Attributable self-approval by the configured solo identity also survives; a different self-approver fails. Solo mode never substitutes for a missing label or revision/digest approval comment. Removing solo mode invalidates self-approval on revalidation.
 7. Service-originated corrections do not loop.
 8. Polling recovery produces the same rule outcomes as webhook delivery.
 9. A forged or duplicate pipeline result cannot increment `bounce`.
 10. User-facing comments use configured terminology while stored telemetry uses semantic roles.
+
+### Revision-bound approval acceptance cases
+
+- Editing title, requester, inline brief, linked brief, or open decisions invalidates the grant.
+- Re-grooming unchanged text with a new revision rejects the old approval.
+- Label-only grants, bare markers, edited comments, missing metadata, and incomplete
+  or ambiguously ordered history fail closed on every tracker.
+- A current-revision revocation defeats approval; a later valid fresh approval restores it.
+- An automation creator cannot make the human requester an independent approver.
+- Revalidate before child writes; on concurrent change, stop and report partial work.
+- Upgrade all consumers together; older consumers ignoring the new protocol cannot
+  claim approval integrity.
+
+### Reclassification and bounce acceptance cases
+
+- Replaying one failed cycle through both skill and service increments once.
+- A distinct attempt increments separately; multiple assertions in one run do not.
+- Counts of 2 and above cap at Pair without weakening Human-only, including on replay.
+- Human challenges cannot waive hard overrides, missing verification, or the cap.
+- Incomplete legacy history blocks count changes while preserving existing restrictions.
+
+### Decomposition retry boundary
+
+Initial creation belongs to the skill's `ai-first-decomposition/v1` protocol, not
+the enforcement service's event idempotency store. Preserve its child provenance
+fields and parent plan/reference/intent comments. Optional Git storage resolves
+PLAN-REF to an exact repository/commit/path; it does not move progress into Git. Any future creation orchestrator must share
+those keys, discover all-state/unlinked items, and reconcile uncertain creates before
+retrying. Parent progress comments must not modify the approved brief description.
+
+Acceptance cases: a three-unit run interrupted after two creates resumes with one
+create; a lost response with an existing keyed item reuses it; a lost response with
+no visible item blocks; closed/human-edited children remain intact; competing plans
+and duplicate keys block; older-revision work needs explicit disposition. The service
+must not claim exactly-once creation where an adapter lacks atomic/idempotent support.

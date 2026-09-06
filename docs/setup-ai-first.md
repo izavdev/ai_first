@@ -20,8 +20,9 @@ Use Epic / Issue / Sub-issue for large / regular / small work items.
 1. Let the skill inspect existing configuration, repository references, and available tracker tools.
 2. Confirm the tracker and all three terminology choices. For Azure DevOps, use work item types supported by the project's process template.
 3. Confirm independent approval or solo development and your canonical tracker identity. Review the installation preview. If `.ai-first/` already exists, review differences and decide how to reconcile customized files.
-4. Let the skill write the local contract files.
-5. For GitHub or Linear, review and explicitly approve creation of missing labels when prompted.
+4. Choose tracker comments (default) or a dedicated Git planning branch. For a branch, confirm the repository, naming/path convention, and durable archive destination/owner. Setup configures the option without creating or pushing branches.
+5. Let the skill write the local contract files.
+6. For GitHub or Linear, review and explicitly approve creation of missing labels when prompted.
 
 The seven workflow labels are `ai-first`, `groomed`, `brief-approved`, `ai-delegate`, `ai-pair`, `human-only`, and `ai-escalated`. GitHub creates them in the repository; Linear creates workspace-level labels. Azure DevOps needs no label bootstrap.
 
@@ -33,8 +34,12 @@ The target repository should contain:
 .ai-first/
 ├── README.md
 ├── ai-first-schema.md
+├── workflow-contract.json
+├── installation.json
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
+├── plan-storage.md
+├── approval.py
 ├── terminology.md
 └── tracker.md
 ```
@@ -42,6 +47,25 @@ The target repository should contain:
 Check that `README.md` names the intended tracker, `terminology.md` contains the confirmed terms, and `tracker.md` is the selected adapter. Files are real copies so they remain usable independently of the skill installation.
 
 The shipped capability manifest has no enabled score-changing capabilities. Installed tools do not automatically become approved capabilities. Use [update-ai-first-capabilities](update-ai-first-capabilities.md) to review them.
+
+## Check installed provenance
+
+Setup copies the machine-readable field contract with the schema and writes
+`installation.json`: package version, source asset hashes, actual installed hashes,
+tracker/path mapping, and source commit/dirty status when known. Source and installed
+hashes are separate so team customizations are visible. An unknown source commit
+is recorded as null; the verified asset hashes still identify the copied content.
+On reruns, compare the receipt and current files before reconciling updates. The
+receipt is an audit aid, not a permission to overwrite customized configuration.
+
+## Choose where plans live
+
+Use tracker comments for a simple setup, or select a dedicated branch to keep
+`plan.json`, context, and decisions together. The tracker pins the branch's exact
+commit/path and continues to own progress, child IDs, and retry history. Planning
+branches are never merged as implementation and are deleted only after completion
+and verified archival. See [plan storage options](plan-storage.md) for an example
+setup prompt and the lifecycle.
 
 ## Work as a solo developer
 
@@ -70,7 +94,7 @@ For each regular item:
 
 1. Run `groom` and review the resulting destination, constraints, scope, and completion criteria.
 2. Resolve every open decision.
-3. Manually apply `brief-approved` using your configured account. In Linear, also post `[ai-first] APPROVED` yourself.
+3. Manually apply `brief-approved` using your configured account. On every tracker, also post the exact revision/digest APPROVED line supplied by grooming yourself.
 4. Invoke `decompose-and-classify`. Its parent summary records use of solo self-approval.
 
 Solo mode bypasses the need for a second person. It keeps the deliberate human
@@ -89,9 +113,14 @@ After grooming, an independent human grants approval by default. In configured s
 
 | Tracker | Approval action and evidence |
 |---|---|
-| GitHub | Apply `brief-approved`; the latest matching label event must identify an approver allowed by the project policy. |
-| Azure DevOps | Apply the `brief-approved` tag; the adding revision identifies the approver. |
-| Linear | Add `brief-approved` **and** post a comment containing `[ai-first] APPROVED`; the comment identifies the approver. |
+| GitHub | Apply the label and post the exact revision/digest APPROVED comment; its author is the approver. |
+| Azure DevOps | Apply the tag and post the exact revision/digest APPROVED comment; its author is the approver. |
+| Linear | Apply the label and post the exact revision/digest APPROVED comment; its author is the approver. |
+
+Setup now also installs `approval.py` (Python 3, no external dependencies). Upgrade
+all consumers together and re-groom existing briefs: label-only and bare-marker
+approvals cannot carry forward. See the [approval protocol](groom.md#obtain-human-approval)
+for edits, revocation, and fresh approval.
 
 No skill grants brief approval. See [grooming](groom.md#obtain-human-approval) for the handoff.
 

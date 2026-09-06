@@ -5,11 +5,11 @@ description: Turn a raw ask or tracker item into an approval-ready AI-first brie
 
 # Groom
 
-User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. Anyone who skips it is redirected deterministically by guard clauses and the enforcement layer.
+User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. The guard clauses guide this invoked session. Direct tracker edits and merges outside the workflow are not automatically blocked; tracker enforcement and required CI checks are optional, separately deployed integrations.
 
 Turns a raw item into a groomed brief that a human can approve. This skill PLANS and CLARIFIES. It does not decompose, does not create small execution items, and never writes code. Its output is a brief plus labels; its exit hands off to a human approver, then to `decompose-and-classify`.
 
-Before doing anything else, read `.ai-first/README.md`, `.ai-first/terminology.md`, `.ai-first/ai-first-schema.md`, and `.ai-first/tracker.md` from the current project. If any is missing, stop and tell the user to install and run `setup-ai-first`. Use the configured large, regular, and small terms in all user-facing text and tracker item types. The tracker file explains which tools to call, how labels are read and written, and how approval identity is checked.
+Require `.ai-first/approval.py`; if absent, rerun setup to install the revision-bound approval protocol. Before doing anything else, read `.ai-first/README.md`, `.ai-first/terminology.md`, `.ai-first/ai-first-schema.md`, and `.ai-first/tracker.md` from the current project. If any is missing, stop and tell the user to install and run `setup-ai-first`. Use the configured large, regular, and small terms in all user-facing text and tracker item types. The tracker file explains which tools to call, how labels are read and written, and how approval identity is checked.
 
 ## Intake and sizing triage
 
@@ -45,9 +45,9 @@ Track unresolved judgment calls as **open decisions**. Do not resolve them yours
 ## Output
 
 1. Write the brief into the item's description (or a linked document if the team convention is set), structured as: Destination / Constraints / Touched surfaces / Definition of done / Out of scope / Human-only list / Open decisions.
-2. Append the parent description block per schema section 2.1, with `open-decisions` set to the real count.
+2. Confirm the request owner's canonical human tracker identity; do not substitute the item's automation creator. Generate a fresh UUID for `brief-revision` on every grooming, including re-grooming with unchanged text. Append the parent block per schema 2.1 with `approval-protocol: brief-approval/v1`, the verified `requester`, and the real `open-decisions` count. Remove any approval label before changing the brief. Persist the brief, re-fetch its stored representation and any linked brief content, and calculate `brief-digest` with `.ai-first/approval.py` per the schema. Write that digest, then re-fetch and verify it still matches. Never invent a digest. If the helper, identity tools, or linked content are unavailable, stop and report the missing prerequisite; do not announce an approval-ready brief.
 3. Apply labels `ai-first` and `groomed`.
-4. NEVER apply `brief-approved`. Read the schema's project approval policy. In independent mode, post a comment naming the suggested independent approver. In solo mode, name the configured human and explain that they must review and manually self-approve the brief using the tracker's approval mechanism. In both modes, state that decomposition remains blocked until valid approval and zero open decisions; never auto-approve because solo mode is enabled.
+4. Show the exact one-line APPROVED record with the computed revision and digest for the human to post after reviewing the persisted snapshot. Explain that both the manual label and this new comment are required on every tracker. Never post the approval record on their behalf. NEVER apply `brief-approved`. Read the schema's project approval policy. In independent mode, post a comment naming the suggested independent approver. In solo mode, name the configured human and explain that they must review and manually self-approve the brief using the tracker's approval mechanism. In both modes, state that decomposition remains blocked until valid approval and zero open decisions; never auto-approve because solo mode is enabled.
 
 ## Stop conditions
 

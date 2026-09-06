@@ -1,0 +1,11 @@
+{
+  "schema": "ai-first-verification/v1",
+  "checks": {
+    "acceptance": {
+      "argv": [],
+      "timeout_seconds": 1200,
+      "covers": "",
+      "negative_case": ""
+    }
+  }
+}
