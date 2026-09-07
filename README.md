@@ -142,9 +142,7 @@ cache can reduce repeated body downloads when the connection provides authoritat
 strong item revisions; complete listings and uncertain-create rules still apply.
 
 See [evaluation and pilot instructions](evaluations/README.md) for blind behavioral
-cases, captured-workflow tests, and the inventory workload benchmark. The
-[review follow-up](docs/review-followup.md) distinguishes implemented changes from
-live validation still required.
+cases, captured-workflow tests, and the inventory workload benchmark.
 
 ## Solo developers
 
