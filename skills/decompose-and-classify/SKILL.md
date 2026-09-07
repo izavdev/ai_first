@@ -19,11 +19,21 @@ and all user-facing text. The rubric in schema section 3 is normative; do not
 classify from intuition. The tracker file explains which tools to call, how labels
 are read and written, and how approval identity is checked.
 
+
+Run `python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1` before
+workflow writes (`python` on Windows). Missing command, nonzero exit, or incompatible
+files require setup reconciliation. Review any `unrecorded_changes` against current
+project policy; never reset them automatically. Read the relevant command section
+of `.ai-first/runtime-guide.md` when preparing helper inputs. Inputs are JSON data
+files; remote facts and human judgments still come from inspected evidence.
+
 ## Select the mode before mode-specific guards
 
-After reading project configuration, fetch the input item read-only and inspect its
-schema kind. Respect the user's explicit mode; never silently switch modes after a
-guard fails. A malformed block must be repaired, not treated as an unclassified item.
+After reading project configuration, fetch the input item read-only. If it has a
+schema block, inspect its kind with `policy.py decode`; only an absent block maps
+to `kind: null`. A malformed or unsupported block requires repair. Run `policy.py
+mode` with that kind and the user's requested mode. Never switch modes after a
+guard fails or pass an unclassified body to the required-block decoder.
 
 | Input | Mode | Next step |
 |---|---|---|
@@ -40,9 +50,13 @@ approval needed for subsequent execution.
 
 ## Normal decomposition guards
 
+Run `policy.py adapter-check` against fresh observed connection evidence per the
+runtime guide. Missing required capabilities block normal decomposition; report
+the actual missing operation, without assuming the tracker brand is sufficient.
+
 1. Fetch the parent via the tracker MCP. Missing `groomed` or `brief-approved` label: post `[ai-first] BLOCKED:` comment with the exact missing step and STOP.
-2. Parse the parent description block (schema 2.1). Malformed: `[ai-first] SCHEMA:` comment and STOP.
-3. Require `approval-protocol: brief-approval/v1`, requester, revision, and digest. Run the active adapter's revision-bound approval check: fetch the current persisted snapshot and linked brief, recompute its digest with `.ai-first/approval.py`, and read complete attributable comment history. Verify the request owner as a human rather than comparing against the tracker creator. Require a current label and the latest valid APPROVED record for this revision/digest by an independent human or the configured solo identity, with no later revocation. Missing helper, legacy records, changed content, or unverifiable ownership/history blocks with `[ai-first] BLOCKED:` and remediation. Read solo policy only from the project schema; never change it during classification. Record accepted solo self-approval in the parent summary.
+2. Parse the parent description block (schema 2.1). Non-whitespace text after the closing block is malformed; preserve it for explicit repair and re-approval, never discard it when building the approval payload. Malformed: `[ai-first] SCHEMA:` comment and STOP.
+3. Require `approval-protocol: brief-approval/v1`, requester, revision, and digest. Run the active adapter's revision-bound approval check: fetch the current persisted snapshot and linked brief, normalize complete captured comment history with `policy.py history`, then run `policy.py check-brief` against the full fresh persisted snapshot and established evidence flags. Require exit 0 and `valid: true`; this command recomputes the digest and reads solo policy from the installed schema. Verify the request owner as a human rather than comparing against the tracker creator. Require a current label and the latest valid APPROVED record for this revision/digest by an independent human or the configured solo identity, with no later revocation. Missing helper, legacy records, changed content, or unverifiable ownership/history blocks with `[ai-first] BLOCKED:` and remediation. Read solo policy only from the project schema; never change it during classification. Record accepted solo self-approval in the parent summary.
 4. `open-decisions` > 0: STOP. Undecided judgment calls poison every downstream classification. Name the open decisions in the comment.
 
 Failure messages ARE the process documentation. Always include the remediation step, never just the refusal.
@@ -55,14 +69,19 @@ items using the active adapter. Read the plan-storage setting in project README
 resolve the parent's PLAN-REF to its exact repository/commit/path before validating
 the plan. Missing guide, unresolved access/archive configuration, or an unavailable
 snapshot blocks branch-backed creation. Apply the schema's Resumable decomposition protocol.
+Run `policy.py select-plan` on the persisted candidates. When it returns a plan,
+run `policy.py reconcile` on that plan, complete inventory, and intents. A null plan
+means inspect unresolved prior work before planning below; never reconcile null.
 If a saved plan exists for this approved revision/digest, resume it with its original
 unit IDs; do not decompose the brief again. Inventory must include closed and unlinked
-items. Legacy or older-revision work, duplicate keys, conflicting plans, or incomplete
+items. Conflicting snapshots of one canonical item ID block even when unit keys
+differ; one child cannot satisfy multiple units. Legacy or older-revision work,
+duplicate keys, conflicting plans, or incomplete
 inventory blocks new creation until explicitly reconciled. Do not auto-delete,
 reopen, or duplicate existing work.
 
 If there is no saved plan and no unresolved prior work, perform decomposition and
-classification below, assign stable unit UUIDs, and persist the complete plan in the
+classification below, assign stable unit UUIDs, derive keys with `policy.py unit-key`, and persist the complete plan in the
 configured backend before any child create. Tracker-comment stores the plan inline;
 git-branch publishes the plan/context and pins its commit/path in a PLAN-REF comment.
 Read it back and check for competing sessions. Never follow a moving branch HEAD.
@@ -110,12 +129,13 @@ that can be executed and verified independently, not the number of delegate item
 
 ## Classification
 
-For each execution item, score V, B, C, A per schema section 3 and apply the derivation rules IN ORDER. Non-negotiables:
+For each execution item, score V, B, C, A per schema section 3, resolve capability evidence, and run `policy.py adjust-scores` followed by `policy.py classify` with the final scores and explicit override/verification flags. Use its result; do not reproduce tier arithmetic in prose. Non-negotiables:
 
 - Hard overrides first. Check the item against schema rule 3.1 and the parent's human-only list before scoring.
 - Delegate requires final V=2, B=2, C=2, A>=1 and valid verification. A=1 must satisfy the bounded-choice contract above.
 - Two or more final zero scores mean human-only. B = 0 and V < 2 prohibit delegation; they never replace human-only with pair.
 - The fixed-value rule: if you cannot write a single machine-runnable `verify` command with a boolean exit code, the item is NOT delegate. Do not invent a vague command to force the tier. Use pair unless a hard override or two zero scores require human-only, and state in `rationale` that verifiability was the limiter - this is a feature of the system, not a failure.
+- Run `policy.py encode` on each complete proposed task block before writes in every mode.
 - Record `scores:` in the block exactly as computed, even when overrides made them moot. They are the audit trail for tier challenges.
 
 ### Verification trust
@@ -183,7 +203,7 @@ the item is how tiers inflate.
 
 1. Follow the persisted plan in dependency order. Immediately before each write,
    revalidate the parent approval snapshot and reconcile complete fresh inventory
-   against the stable unit key. Reuse an existing match, including a closed child;
+   against the stable unit key using `policy.py reconcile`. The runtime guide permits `policy.py inventory` to reuse unchanged bodies behind fresh complete listings and proven strong revisions; otherwise refetch all bodies. Reuse an existing match, including a closed child;
    preserve current human edits and failure history. Stop on ambiguity.
 2. For a missing unit with no unresolved attempt, record and read back a pending
    CREATE-INTENT, then create the child with its complete task block and provenance
@@ -221,7 +241,7 @@ permission to bypass current approval, classification restrictions, or review.
 3. Read `failed-cycles` and `bounce` per the schema. Add only a new failed cycle ID
    and set bounce to the ledger length. Recover missing legacy history before a
    count-changing update; never reset a nonzero count or invent historical IDs.
-4. Re-score using the current evidence, inherited restrictions, and shared rubric.
+4. Re-score using the current evidence, inherited restrictions, and shared rubric. Run `policy.py reclassify` with the established failure ledger and human-tier evidence; use the returned tier, bounce, ledger, and escalation state.
    Apply hard overrides and the two-zero rule first. At `bounce >= 2`, delegation
    is prohibited: choose pair unless the derived or attributable human-set tier is
    human-only. Keep `ai-escalated` at and above the threshold, including on retries
@@ -247,7 +267,7 @@ Refuse when B=0 or the scope is not a small bounded item; direct the user to gro
 instead. Do not run normal parent approval guards or create child items. Existing
 brief-kind or task-kind items use their corresponding mode, not this shortcut.
 
-Write the task block and one tier label onto the input item itself. Initialize
+Use `policy.py encode` to validate the complete proposed task block in every mode, then write it and one tier label onto the input item itself. Initialize
 `bounce: 0` and `failed-cycles: none`; provide acceptance criteria, context, and
 stop conditions. Explicitly record why skipping Gate 1 is acceptable for this item.
 The exception does not remove hard overrides, verification requirements, or human

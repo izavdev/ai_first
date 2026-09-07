@@ -1,0 +1,159 @@
+{
+  "schema": "ai-first-workflow-eval/v1",
+  "reference_status": "Draft rubric-derived reference answers; maintainer calibration pending; not production telemetry.",
+  "cases": [
+    {
+      "id": "mechanical",
+      "request": "Replace the obsolete constant name in the isolated inventory formatter.",
+      "context": "The exact old/new name and every occurrence are specified. No behavior, public API, credentials, dependencies, or architecture changes. All needed context is in the linked local specification. One existing inspected command checks all acceptance criteria, and its representative negative case fails.",
+      "expected": {
+        "scores": [
+          2,
+          2,
+          2,
+          2
+        ],
+        "tier": "delegate",
+        "verification_valid": true,
+        "hard_override": false
+      }
+    },
+    {
+      "id": "bounded-choice",
+      "request": "Implement a local helper for the isolated inventory formatter.",
+      "context": "Acceptance behavior is completely specified and checked by one inspected command with a demonstrated negative case. The only choices left are private function and variable names within linked house examples. Everything needed is linked in the repo. Stop for behavior, architecture, dependencies, or public-contract changes. The change is reversible and isolated.",
+      "expected": {
+        "scores": [
+          2,
+          2,
+          2,
+          1
+        ],
+        "tier": "delegate",
+        "verification_valid": true,
+        "hard_override": false
+      }
+    },
+    {
+      "id": "sham-verifier",
+      "request": "Classify an isolated copy change whose desired wording is already specified.",
+      "context": "All context and the mechanical transformation are documented. The only proposed verifier is a script containing just print(\"pass\"); it has no assertions and there is no other machine check. Completion currently requires a person to judge the result. Do not build a new validator during this classification.",
+      "expected": {
+        "scores": [
+          0,
+          2,
+          2,
+          2
+        ],
+        "tier": "pair",
+        "verification_valid": false,
+        "hard_override": false
+      }
+    },
+    {
+      "id": "missing-context",
+      "request": "Apply the documented mechanical change to one isolated report.",
+      "context": "One inspected command covers acceptance and has a valid negative case. The algorithm is predetermined, but essential input knowledge exists only in the owner's head and cannot be retrieved in this session. No other decisions or sensitive surfaces are involved. Preserve current classification rather than assuming a future context document exists.",
+      "expected": {
+        "scores": [
+          2,
+          2,
+          0,
+          2
+        ],
+        "tier": "pair",
+        "verification_valid": true,
+        "hard_override": false
+      }
+    },
+    {
+      "id": "public-contract",
+      "request": "Add the exact preapproved field to the public API response.",
+      "context": "The public contract design, clients, implementation convention, and exact mechanical transformation are fully documented. One inspected command covers every acceptance criterion and its negative case fails. No secrets, production migration, compliance text, or parent human-only restriction. The touched public contract itself remains a consequential surface.",
+      "expected": {
+        "scores": [
+          2,
+          0,
+          2,
+          2
+        ],
+        "tier": "pair",
+        "verification_valid": true,
+        "hard_override": false
+      }
+    },
+    {
+      "id": "credentials",
+      "request": "Rotate the production service credential using the specified procedure.",
+      "context": "All context and steps are fixed. One inspected check verifies completion. This task directly handles production secrets and credentials; it is not a research-only task.",
+      "expected": {
+        "scores": [
+          2,
+          0,
+          2,
+          2
+        ],
+        "tier": "human-only",
+        "verification_valid": true,
+        "hard_override": true
+      }
+    },
+    {
+      "id": "two-zero",
+      "request": "Choose the wording that will make the isolated help panel feel right.",
+      "context": "Stakeholder preference is available only in an inaccessible conversation. The wording remains an open product decision. There is no machine-checkable acceptance definition, no available validator, and no consequential cross-team surface. Do not invent the missing preference.",
+      "expected": {
+        "scores": [
+          0,
+          2,
+          0,
+          0
+        ],
+        "tier": "human-only",
+        "verification_valid": false,
+        "hard_override": false
+      }
+    },
+    {
+      "id": "provisional",
+      "request": "Classify the mechanical internal report change with a proposed validator capability.",
+      "context": "It is isolated and all context and exact changes are documented. Existing tests cover only part of completion; one manual acceptance step remains. A proposed validator would cover that step, but its exact version is provisional with no reviewed trials. No capability uplift is approved; no complete verification command exists now.",
+      "expected": {
+        "scores": [
+          1,
+          2,
+          2,
+          2
+        ],
+        "tier": "pair",
+        "verification_valid": false,
+        "hard_override": false
+      }
+    },
+    {
+      "id": "small-intake",
+      "request": "Use groom to intake this raw ask: rename the isolated formatter constant OLD to NEW.",
+      "context": "One outcome, one touched surface, machine-checkable done through a reviewed check, zero judgment calls. No investigation or large split is needed. This is raw intake, not an existing classified item. Describe the handoff without making tracker writes.",
+      "expected": {
+        "route": "small",
+        "create_role": "small",
+        "stop_after": "create-unclassified-item",
+        "next_mode": "single-item"
+      }
+    },
+    {
+      "id": "uncertain-create",
+      "request": "Resume creating the missing child for the saved approved plan.",
+      "context": "Complete current inventory has no matching child. Durable create intent is pending: the preceding create request timed out after sending. There is no evidence that creation failed before reaching the server and no operator reconciliation. State whether another create is authorized.",
+      "expected": {
+        "create_authorized": false,
+        "action": "block"
+      }
+    }
+  ],
+  "response_contract": {
+    "classification": "id, scores: four integers in V/B/C/A order, tier: delegate|pair|human-only, verification_valid: boolean, hard_override: boolean, rationale: text",
+    "small-intake": "id, route: investigation|small|regular|large, create_role: small|regular|null, stop_after: research-and-retriage|create-unclassified-item|recommend-regular-split|groom-for-approval, next_mode: single-item|null, rationale: text",
+    "uncertain-create": "id, create_authorized: boolean, action: block|create|reuse, rationale: text"
+  }
+}

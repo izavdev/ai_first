@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'skills/setup-ai-first/assets'
 MANIFEST = ASSETS / 'asset-manifest.json'
 sys.path.insert(0, str(ROOT))
+from src.ai_first import PACKAGE_VERSION, POLICY_REVISION
 
 
 def unique(pairs):
@@ -24,7 +25,7 @@ def unique(pairs):
 
 
 def read_json(path):
-    return json.loads(path.read_text(), object_pairs_hook=unique)
+    return json.loads(path.read_text(encoding='utf-8'), object_pairs_hook=unique)
 
 
 def asset_manifest():
@@ -32,7 +33,7 @@ def asset_manifest():
              if p.is_file() and p != MANIFEST and '__pycache__' not in p.parts]
     return dict(schema='ai-first-assets/v1', package_version=read_json(ROOT / '.codex-plugin/plugin.json')['version'],
                 sources={p.relative_to(ROOT).as_posix(): 'sha256:'+hashlib.sha256(p.read_bytes()).hexdigest()
-                         for p in sorted(paths)})
+                         for p in sorted(paths, key=lambda p: p.relative_to(ROOT).as_posix())})
 
 
 def contract_table():
@@ -42,6 +43,15 @@ def contract_table():
         for field, rule in contract[scope].items():
             lines.append(f'| {scope} | `{field}` | `{rule}` |')
     return '\n'.join(lines)
+
+
+def runtime_manifest():
+    paths = [ASSETS / name for name in ('policy.py', 'approval.py', 'workflow-contract.json', 'adapter-contract.json')]
+    paths += sorted((ASSETS / 'ai_first').glob('*.py'))
+    return dict(schema='ai-first-runtime/v1', policy_revision=POLICY_REVISION,
+                package_version=read_json(ROOT / '.codex-plugin/plugin.json')['version'],
+                files={p.relative_to(ASSETS).as_posix(): 'sha256:'+hashlib.sha256(p.read_bytes()).hexdigest()
+                       for p in sorted(paths)})
 
 
 def check(condition, message):
@@ -56,7 +66,7 @@ def main():
     try:
         import yaml
     except ImportError:
-        raise ValueError('Install development dependencies: python3 -m pip install -r requirements-dev.txt')
+        raise ValueError('Install development dependencies: python -m pip install -r requirements-dev.txt')
 
     class Loader(yaml.SafeLoader):
         pass
@@ -68,15 +78,20 @@ def main():
 
     schema = ASSETS / 'ai-first-schema.md'
     start, end = '<!-- contract-fields:start -->', '<!-- contract-fields:end -->'
-    text = schema.read_text()
+    text = schema.read_text(encoding='utf-8')
     check(text.count(start) == text.count(end) == 1, 'Missing/duplicate generated contract table markers')
     before, rest = text.split(start)
     current, after = rest.split(end)
     wanted = '\n' + contract_table() + '\n'
     if args.refresh:
-        schema.write_text(before + start + wanted + end + after)
-        MANIFEST.write_text(json.dumps(asset_manifest(), indent=2, ensure_ascii=False)+'\n')
+        schema.write_text(before + start + wanted + end + after, encoding='utf-8', newline='\n')
+        (ASSETS / 'runtime-manifest.json').write_text(json.dumps(runtime_manifest(), indent=2)+'\n',
+                                                    encoding='utf-8', newline='\n')
+        MANIFEST.write_text(json.dumps(asset_manifest(), indent=2, ensure_ascii=False)+'\n',
+                            encoding='utf-8', newline='\n')
     else:
+        check(read_json(ASSETS / 'runtime-manifest.json') == runtime_manifest(),
+              'Runtime hashes drifted; review changes then use --refresh')
         check(current == wanted, 'Contract field table drift; review changes then use --refresh')
         check(MANIFEST.exists() and read_json(MANIFEST) == asset_manifest(),
               'Shipped asset hashes drifted; review changes then use --refresh')
@@ -86,21 +101,22 @@ def main():
     claude = read_json(ROOT / '.claude-plugin/plugin.json')
     codex = read_json(ROOT / '.codex-plugin/plugin.json')
     check(claude['version'] == codex['version'], 'Plugin versions differ')
+    check(codex['version'] == PACKAGE_VERSION, 'Runtime and plugin versions differ')
     skills = sorted(ROOT.glob('skills/*/SKILL.md'))
     check({(ROOT / path).resolve() for path in claude['skills']} == {p.parent.resolve() for p in skills}, 'Claude skill paths differ from package')
     check((ROOT / codex['skills']).resolve() == (ROOT / 'skills').resolve(), 'Codex skills path invalid')
     marketplace = read_json(ROOT / '.claude-plugin/marketplace.json')
     check(any(p['name'] == claude['name'] and p['source'] == './' for p in marketplace['plugins']), 'Marketplace bundle mismatch')
     for p in skills:
-        front = p.read_text().split('---', 2)[1]
+        front = p.read_text(encoding='utf-8').split('---', 2)[1]
         fields = yaml.load(front, Loader=Loader)
         check(fields.get('name') == p.parent.name and bool(fields.get('description')), f'Invalid front matter: {p}')
-    for base in ('skills', 'integrations'):
+    for base in ('skills', 'integrations', '.github/workflows'):
         for p in (ROOT / base).rglob('*'):
             if p.suffix in ('.yaml', '.yml'):
-                yaml.load(p.read_text(), Loader=Loader)
+                yaml.load(p.read_text(encoding='utf-8'), Loader=Loader)
 
-    capabilities = yaml.load((ASSETS / 'ai-first-capabilities.yml').read_text(), Loader=Loader)
+    capabilities = yaml.load((ASSETS / 'ai-first-capabilities.yml').read_text(encoding='utf-8'), Loader=Loader)
     check(capabilities['defaults'] == {'enabled': False, 'status': 'provisional'}, 'Unsafe capability defaults')
     check(capabilities['capabilities'] == capabilities['approvals'] == [], 'Shipped defaults must not approve capabilities')
     routes = capabilities['profile_routing']
@@ -110,7 +126,7 @@ def main():
     # Local link targets only: this does not make network requests or claim live URL validity.
     documents = [ROOT / 'README.md', ROOT / 'whitepaper.md'] + list((ROOT / 'docs').glob('*.md')) + list((ROOT / 'skills').rglob('*.md'))
     for p in documents:
-        for target in re.findall(r'\]\(([^\s)]+)\)', p.read_text()):
+        for target in re.findall(r'\]\(([^\s)]+)\)', p.read_text(encoding='utf-8')):
             if '://' in target or target.startswith('#'):
                 continue
             path = target.split('#')[0]

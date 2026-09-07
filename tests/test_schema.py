@@ -8,18 +8,18 @@ FIXTURES = Path(__file__).parent / 'fixtures/schema'
 
 class SchemaTests(unittest.TestCase):
     def task(self):
-        return (FIXTURES / 'github-task.md').read_text()
+        return (FIXTURES / 'github-task.md').read_text(encoding='utf-8')
 
     def test_tracker_fixtures_round_trip_with_human_text(self):
         for tracker in ('github', 'ado', 'linear'):
-            text = (FIXTURES / f'{tracker}-task.md').read_text()
+            text = (FIXTURES / f'{tracker}-task.md').read_text(encoding='utf-8')
             with self.subTest(tracker=tracker):
                 human, fields = decode(text, tracker, labels=['ai-delegate', 'unrelated'])
                 self.assertEqual(human, 'Task summary: café\n\nAcceptance: approved output.')
                 self.assertEqual(encode(human, fields, tracker), text)
 
     def test_brief_fixture_and_required_fields(self):
-        text = (FIXTURES / 'github-brief.md').read_text()
+        text = (FIXTURES / 'github-brief.md').read_text(encoding='utf-8')
         human, fields = decode(text)
         self.assertEqual(encode(human, fields), text)
         for key in CONTRACT['brief']:
@@ -50,10 +50,20 @@ class SchemaTests(unittest.TestCase):
         bare = self.task().replace('```\n', '')
         self.assertEqual(decode(bare)[1]['kind'], 'task')
 
-    def test_line_endings_and_ignored_suffix(self):
+    def test_line_endings_and_whitespace_suffix(self):
         expected = decode(self.task())
         self.assertEqual(decode(self.task().replace('\n', '\r\n')), expected)
-        self.assertEqual(decode(self.task()+'Ignored footer'), expected)
+        self.assertEqual(decode(self.task()+' \t\r\n\n'), expected)
+
+    def test_text_after_fenced_or_bare_contract_requires_repair(self):
+        for tracker in ('github', 'ado', 'linear'):
+            body = (FIXTURES / f'{tracker}-task.md').read_text(encoding='utf-8')
+            forms = [body] if tracker == 'linear' else [body, body.replace('```\n', '')]
+            for form in forms:
+                for suffix in ('Changed acceptance: publish the output.', '\n<!-- hidden edit -->'):
+                    with self.subTest(tracker=tracker, suffix=suffix), self.assertRaisesRegex(
+                            ValueError, 'after.*block'):
+                        decode(form + suffix, tracker)
 
     def test_invalid_numbers_ledgers_and_score_deltas_fail(self):
         replacements = [('bounce: 0', 'bounce: true'), ('bounce: 0', 'bounce: -1'),

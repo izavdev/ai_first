@@ -1,0 +1,150 @@
+{
+  "schema": "ai-first-predictions/v1",
+  "mode": "independent-offline-agent-rerun",
+  "evaluator": "independent Codex agent",
+  "results": [
+    {
+      "id": "mechanical",
+      "scores": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "tier": "delegate",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "The exact transformation, context, and acceptance criteria are documented. The inspected complete check detects its negative case; isolated mechanical work yields delegate."
+    },
+    {
+      "id": "bounded-choice",
+      "scores": [
+        2,
+        2,
+        2,
+        1
+      ],
+      "tier": "delegate",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "Private naming choices are bounded by linked conventions and stop conditions, so A1 applies. Complete trusted verification, local context, and isolated consequences permit delegate."
+    },
+    {
+      "id": "sham-verifier",
+      "scores": [
+        0,
+        2,
+        2,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": false,
+      "hard_override": false,
+      "rationale": "The print-only script has no assertions and verifies nothing. Human judgment is the only completion check, so V0 limits this otherwise mechanical isolated work to pair; no new validator is assumed."
+    },
+    {
+      "id": "missing-context",
+      "scores": [
+        2,
+        2,
+        0,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "Essential knowledge remains inaccessible in the owner's head, giving C0. The predetermined transformation and complete trusted check do not supply that missing context; current evidence yields pair."
+    },
+    {
+      "id": "public-contract",
+      "scores": [
+        2,
+        0,
+        2,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "A public API contract is B0 even when its exact design is preapproved and verification is complete. No hard override applies and there is only one zero, so the result is pair."
+    },
+    {
+      "id": "credentials",
+      "scores": [
+        2,
+        0,
+        2,
+        2
+      ],
+      "tier": "human-only",
+      "verification_valid": true,
+      "hard_override": true,
+      "rationale": "The inspected check and fixed procedure support V2 C2 A2, but direct production credential handling is B0 and triggers the hard override to human-only."
+    },
+    {
+      "id": "two-zero",
+      "scores": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "tier": "human-only",
+      "verification_valid": false,
+      "hard_override": false,
+      "rationale": "Subjective completion, inaccessible preference, and an open product decision yield V0 C0 A0. The three-zero restriction requires human-only even though the help panel is isolated."
+    },
+    {
+      "id": "provisional",
+      "scores": [
+        1,
+        2,
+        2,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": false,
+      "hard_override": false,
+      "rationale": "Current tests cover only part of completion, leaving V1 and no complete valid verification command. The provisional unapproved validator supplies no uplift, so this mechanical isolated task remains pair."
+    },
+    {
+      "id": "small-intake",
+      "route": "small",
+      "create_role": "small",
+      "stop_after": "create-unclassified-item",
+      "next_mode": "single-item",
+      "rationale": "All four small-intake conditions are established. Simulate creating one unclassified Sub-issue with the source ask verbatim, then stop and hand off to a separately human-invoked decompose-and-classify in single-item mode. Do not classify or start that skill during grooming."
+    },
+    {
+      "id": "uncertain-create",
+      "create_authorized": false,
+      "action": "block",
+      "rationale": "A pending durable intent represents an uncertain server-reaching create attempt. Absence from even complete current inventory does not prove noncreation. Preserve the intent and block another create until evidenced pre-create failure or explicit operator reconciliation establishes confirmed-not-created."
+    }
+  ],
+  "instruction_notes": [
+    {
+      "id": "remaining-ambiguity",
+      "status": "none-found",
+      "observation": "No remaining instruction ambiguity affected these ten cases or the two requested workflow distinctions. Raw scoring now explicitly includes existing inspected tests and excludes proposed uplifts; the schema references all C1-C12 capability invariants."
+    },
+    {
+      "id": "new-brief-versus-resume",
+      "source": "skills/decompose-and-classify/SKILL.md: Inspect existing decomposition before planning",
+      "distinguished": true,
+      "observation": "Select a plan from persisted candidates. Reconcile only a returned plan, then resume it with its original unit IDs. A null plan requires inspecting unresolved prior work; with no saved plan and no unresolved prior work, decompose and classify, assign stable IDs, and persist/read back the complete plan before any child creation. Never reconcile null.",
+      "helper_observation": {
+        "plan": null
+      }
+    },
+    {
+      "id": "unclassified-versus-malformed",
+      "source": "skills/decompose-and-classify/SKILL.md: Select the mode before mode-specific guards",
+      "distinguished": true,
+      "observation": "Only an absent schema block maps to kind null. Do not pass that unclassified body to the required-block decoder; an explicit single-item request can select single-item mode. A present malformed or unsupported block requires repair and cannot be converted into an unclassified shortcut. Existing valid brief/task kinds select their corresponding modes.",
+      "helper_observation": {
+        "mode": "single-item"
+      }
+    }
+  ]
+}

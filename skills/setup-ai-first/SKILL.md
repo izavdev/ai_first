@@ -97,6 +97,11 @@ Show the proposed tracker, approval policy (and solo identity if selected), plan
 ├── ai-first-schema.md
 ├── workflow-contract.json
 ├── installation.json
+├── policy.py
+├── ai_first/
+├── runtime-manifest.json
+├── runtime-guide.md
+├── adapter-contract.json
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
 ├── plan-storage.md
@@ -112,6 +117,8 @@ The source files shipped with this skill are:
 - [assets/ai-first-schema.md](assets/ai-first-schema.md)
 - [assets/plan-storage.md](assets/plan-storage.md)
 - [assets/approval.py](assets/approval.py)
+- [assets/policy.py](assets/policy.py) and the complete [assets/ai_first/](assets/ai_first/) runtime package
+- [assets/runtime-manifest.json](assets/runtime-manifest.json), [assets/runtime-guide.md](assets/runtime-guide.md), and [assets/adapter-contract.json](assets/adapter-contract.json)
 - [assets/ai-first-capabilities.yml](assets/ai-first-capabilities.yml)
 - [assets/capabilities-guide.md](assets/capabilities-guide.md)
 - the selected file under `assets/adapters/`
@@ -156,12 +163,17 @@ The large item contains multiple independently groomed regular items. The regula
 
 Use real file copies, not symlinks. Plugin caches and cross-agent skill installers may not preserve symlinks.
 
-Install `approval.py` as a real copy alongside the schema. It requires Python 3
+Install `approval.py` as a real copy alongside the schema. It requires Python 3.10 or newer
 and no external packages. On upgrades, reconcile schema, helper, and active adapter
 together. Explain that every consumer must support `brief-approval/v1`; existing
 briefs need re-grooming and fresh approval, and label-only/bare-marker grants are
 not migrated automatically. Preserve historical comments for audit. Do not grant
 approval or rewrite historical grants during setup.
+
+For upgrades to 0.4.1, reconcile the stricter trailing-content parsing rule and the
+canonical-child conflict rule with every consumer. Text after a schema block now
+requires explicit repair, with re-grooming and fresh approval for changed briefs.
+Do not automatically remove that text or rewrite tracker items during setup.
 
 ### Record the installed asset revision
 
@@ -170,20 +182,28 @@ source assets before copying. On mismatch, report the inconsistent package and s
 instead of recording misleading provenance. Install `workflow-contract.json` beside
 the prose schema; reconcile them together on reruns.
 
-After writing and verifying the selected files, write `.ai-first/installation.json`
-with `schema: ai-first-installation/v1`, setup date, package version, SHA-256 of the
-source asset manifest, source hashes for the selected assets, and final installed
-file hashes. Include the selected tracker and a source-to-destination path mapping
-(e.g. the chosen adapter becomes tracker.md). Exclude installation.json itself from
-its file hash map. Separate source hashes from installed hashes so confirmed team
-customizations remain visible. Include the source Git commit and dirty status only
-when verifiable in the source package checkout; otherwise record null, never guess.
+Read the installation section of [assets/runtime-guide.md](assets/runtime-guide.md).
+Copy the entire `ai_first/` package and `policy.py` as real files alongside the
+existing helper, JSON contracts, runtime manifest, and runtime guide. Reconcile
+all runtime files together on upgrades. Preserve reviewed schema, tracker, and
+capability customizations; retain exactly one current policy marker in schema and
+tracker only after checking their compatibility with the new runtime.
 
-A receipt records provenance, not approval or a signature. Preserve customized files
-and show differences on reruns; do not use hash mismatches as permission to reset
-them. Keep the prior receipt until the update succeeds. Older projects without a
-receipt need a comparison with current installed content, not an invented history.
-No external metadata lookup or release download is needed to write this receipt.
+After reviewing the final installed files, run the installed `policy.py
+record-installation` command against the shipped source asset manifest. It verifies
+source/runtime hashes and writes the v2 receipt atomically; do not hand-author or
+version-edit a receipt. Then run `policy.py doctor --require-policy
+ai-first-policy/v1`. Report incompatible files or unrecorded changes and reconcile
+them before workflow writes. Existing v1 receipts require this upgrade path.
+
+Inspect the connected tracker against `adapter-contract.json` and record actual
+server/client name, version, per-check evidence, and concurrency mode in
+`.ai-first/adapter-evidence.json`. Run `policy.py adapter-check` on that record.
+Missing integration or unsupported operations may leave local setup complete, but
+normal decomposition is pending those capabilities. Do not label local fixtures
+as a live server certification. Read-only descriptions and existing captures can
+establish capabilities; obtaining new live write evidence needs authorization for
+that specific test. Never create test items just to make setup pass.
 
 ## 8. Tracker bootstrap
 
@@ -202,4 +222,4 @@ Local verification and human review work without a required PR gate.
 
 ## 9. Finish
 
-Report the active tracker, the three selected terms, approval policy and any pending identity verification, plan-storage choice and pending archive/access details, and the files written. Tell the user that `groom` is ready. Explain the two-part approval rule on every tracker: a manual label plus a new human comment containing the exact brief revision and digest. Explain durable revocation through the REVOKED record.
+Report the active tracker, the three selected terms, approval policy and any pending identity verification, plan-storage choice and pending archive/access details, and the files written. Report local compatibility and tracker readiness separately. `groom` is ready only when its needed item/identity operations are available; normal decomposition additionally requires the complete adapter preflight. Explain the two-part approval rule on every tracker: a manual label plus a new human comment containing the exact brief revision and digest. Explain durable revocation through the REVOKED record.

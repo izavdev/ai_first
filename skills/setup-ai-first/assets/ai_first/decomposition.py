@@ -75,8 +75,18 @@ def reconcile(plan, items, intents, *, inventory_complete=False, resolved_prior=
     if not isinstance(intents, dict) or any(k not in desired or v not in
             ('pending', 'created', 'confirmed-not-created') for k, v in intents.items()):
         raise ValueError('Unknown or conflicting create intent')
-    found = {}
+    snapshots = {}
     for item in items:
+        if not isinstance(item, dict):
+            raise ValueError('Inventory requires canonical item snapshots')
+        identity = item.get('id')
+        if not isinstance(identity, str) or not identity.strip():
+            raise ValueError('Missing canonical child identity')
+        if identity in snapshots and snapshots[identity] != item:
+            raise ValueError('Conflicting snapshots for one canonical child identity')
+        snapshots[identity] = item
+    found = {}
+    for item in snapshots.values():
         if item.get('parent') != plan['parent'] and item.get('key') not in desired:
             continue
         if (item.get('parent') != plan['parent'] or item.get('revision') != plan['revision']
@@ -85,8 +95,6 @@ def reconcile(plan, items, intents, *, inventory_complete=False, resolved_prior=
                 continue  # Explicit human disposition, never suppress a current-key collision.
             raise ValueError('Legacy, prior-revision, or conflicting child requires explicit reconciliation')
         key = item['key']
-        if not isinstance(item.get('id'), str) or not item['id'].strip():
-            raise ValueError('Missing canonical child identity')
         if key in found and found[key] != item:
             raise ValueError('Multiple items or conflicting snapshots for one unit key')
         found[key] = item

@@ -12,8 +12,8 @@ import uuid
 from .classification import classify
 from .decomposition import unit_key
 
-CONTRACT_PATH = Path(__file__).resolve().parents[2] / 'skills/setup-ai-first/assets/workflow-contract.json'
-CONTRACT = json.loads(CONTRACT_PATH.read_text())
+CONTRACT_PATH = Path(__file__).resolve().parent.parent / 'workflow-contract.json'
+CONTRACT = json.loads(CONTRACT_PATH.read_text(encoding='utf-8'))
 TIERS = {'human-only': 0, 'pair': 1, 'delegate': 2}
 
 
@@ -140,6 +140,9 @@ def decode(body, tracker='github', *, labels=None):
         raise ValueError('Closing delimiter missing')
     if fenced and (end+1 == len(lines) or lines[end+1].rstrip('\n') != '```'):
         raise ValueError('Closing fence missing')
+    suffix = end + (2 if fenced else 1)
+    if ''.join(lines[suffix:]).strip():
+        raise ValueError('Text after the schema block requires repair; preserve it before the block and re-approve briefs')
     human = ''.join(lines[:start])
     # One newline separates the human text from the canonical encoding.
     if human.endswith('\n'):

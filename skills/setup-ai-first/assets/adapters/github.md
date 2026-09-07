@@ -1,5 +1,7 @@
 # Tracker adapter: GitHub Issues
 
+<!-- ai-first-policy: ai-first-policy/v1 -->
+
 Resolves `ai-first-schema.md`'s tracker-neutral terms to GitHub Issues. Read this alongside the schema before a skill session writes anything to GitHub.
 
 Prefer connected GitHub tools when they expose the required issue, event, and relationship operations. Otherwise use the `gh` CLI from the target repository. Infer the repository from its remote unless the user provides another repository explicitly.
@@ -104,3 +106,15 @@ stop before creating more items. After an uncertain create response, reconcile b
 key and preserve a pending intent until the outcome is established. A zero-result
 search alone does not authorize retry. Serialize decomposition when the tracker
 cannot guarantee concurrent create idempotency; report that limitation explicitly.
+
+## Connection conformance
+
+Use installed `adapter-contract.json` and `policy.py adapter-check` to report the
+actual connection's supported operations and observed server/client version.
+The shipped tests use synthetic API-shaped captures; no live server version is
+certified. Normalize complete approval pages with `policy.py history` per
+`runtime-guide.md`. Verify the stored description round trip through `policy.py
+decode`; HTML or MCP-specific normalization requires an explicit reviewed mapping.
+For body caching, use `policy.py inventory` only with fresh complete listings and
+proven strong revisions; a timestamp is not a revision guarantee. All uncertainty
+falls back to complete body fetches or a blocked operation, never guessed evidence.

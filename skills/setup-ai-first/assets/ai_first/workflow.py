@@ -7,6 +7,21 @@ TIERS = {'human-only': 0, 'pair': 1, 'delegate': 2}
 CYCLE_ID = re.compile(r'[A-Za-z0-9][A-Za-z0-9._:/@+\-]*')
 
 
+def intake(needs_investigation, one_outcome, one_surface, machine_checkable, no_decisions, large):
+    """Route reviewed intake facts; small creation stops before classification."""
+    if any(type(value) is not bool for value in
+           (needs_investigation, one_outcome, one_surface, machine_checkable, no_decisions, large)):
+        raise ValueError('Resolve intake facts before routing; all flags must be booleans')
+    if needs_investigation:
+        return dict(route='investigation', create_role=None, next_skill=None, stop_after='research-and-retriage')
+    if all((one_outcome, one_surface, machine_checkable, no_decisions)):
+        return dict(route='small', create_role='small', next_skill='decompose-and-classify',
+                    next_mode='single-item', stop_after='create-unclassified-item')
+    if large:
+        return dict(route='large', create_role=None, next_skill=None, stop_after='recommend-regular-split')
+    return dict(route='regular', create_role='regular', next_skill=None, stop_after='groom-for-approval')
+
+
 def select_mode(requested=None, *, kind=None):
     """Dispatch after read-only intake; a missing brief never implies an exception."""
     if requested == 'single-task':

@@ -4,6 +4,8 @@ CLI: python approval.py payload.json
 The input shape and canonicalization are defined in ai-first-schema.md.
 Identity, human authorship, complete history, and snapshot consistency are adapter
 responsibilities. Do not infer these properties from an item's own assertions.
+Adapters must validate the entire description before constructing this payload,
+rejecting non-whitespace content after the schema block rather than omitting it.
 """
 import hashlib
 import json
@@ -92,8 +94,13 @@ def approval_valid(payload, stored_digest, records, *, label_present,
     if latest is None:
         return False
     action, signed_digest, actor = latest
+    requester = payload['requester']
+    if payload['item'].startswith('github:'):
+        # GitHub login equality is case-insensitive; hashing preserves stored text.
+        actor, requester = actor.casefold(), requester.casefold()
+        solo_identity = solo_identity.casefold() if isinstance(solo_identity, str) else solo_identity
     return (action == 'APPROVED' and signed_digest == digest
-            and (actor != payload['requester'] or actor == solo_identity))
+            and (actor != requester or actor == solo_identity))
 
 
 if __name__ == '__main__':

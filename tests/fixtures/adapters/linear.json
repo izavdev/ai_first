@@ -1,0 +1,48 @@
+{
+  "tracker": "linear",
+  "pages": [
+    {
+      "request_cursor": null,
+      "data": {
+        "nodes": [
+          {
+            "id": "1",
+            "body": "original",
+            "user": {
+              "id": "reviewer-id"
+            },
+            "createdAt": "2026-09-07T10:00:00Z",
+            "updatedAt": "2026-09-07T10:00:00Z"
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": true,
+          "endCursor": "page-2"
+        }
+      }
+    },
+    {
+      "request_cursor": "page-2",
+      "data": {
+        "nodes": [
+          {
+            "id": "2",
+            "body": "edited",
+            "user": {
+              "id": "reviewer-id"
+            },
+            "createdAt": "2026-09-07T10:00:01Z",
+            "updatedAt": "2026-09-07T10:10:00Z"
+          }
+        ],
+        "pageInfo": {
+          "hasNextPage": false,
+          "endCursor": null
+        }
+      }
+    }
+  ],
+  "human_ids": [
+    "reviewer-id"
+  ]
+}

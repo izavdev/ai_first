@@ -74,8 +74,10 @@ commands are never executed during discovery.
   by encoding an approved house approach.
 - No capability may raise B. Blast radius describes the cost of failure.
 
-The classifier scores the task without capabilities first, then applies at most
-one point per eligible axis. Malformed, unapproved, disabled, provisional, or
+The classifier scores available inspected tests, context, and conventions first,
+without proposed capability uplifts, then applies at most one point per eligible
+axis for a missing property actually resolved by the approved capability. Do not
+remove existing tests from raw V or count an already-resolved property twice. Malformed, unapproved, disabled, provisional, or
 version-mismatched claims never change a score. Identical copies of one metadata
 ID/version across multiple project skill roots count once; conflicting copies
 invalidate that claim until reconciled.

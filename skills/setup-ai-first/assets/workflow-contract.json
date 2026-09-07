@@ -25,12 +25,18 @@
     "failed-cycles": "cycles",
     "context": "text"
   },
-  "optional_task": {"verify": "text", "verify-id": "slug", "profile": "text", "stop-ask": "text"},
+  "optional_task": {
+    "verify": "text",
+    "verify-id": "slug",
+    "profile": "text",
+    "stop-ask": "text"
+  },
   "provenance": {
     "decomposition-parent": "text",
     "parent-revision": "uuid",
     "parent-brief-digest": "digest",
     "decomposition-unit": "uuid",
     "decomposition-key": "digest"
-  }
+  },
+  "policy_revision": "ai-first-policy/v1"
 }

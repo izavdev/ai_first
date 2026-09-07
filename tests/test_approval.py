@@ -4,6 +4,8 @@ import importlib.util
 from pathlib import Path
 import unittest
 
+from src.ai_first.schema import decode, encode
+
 PATH = Path(__file__).resolve().parents[1] / 'skills/setup-ai-first/assets/approval.py'
 spec = importlib.util.spec_from_file_location('approval', PATH)
 approval = importlib.util.module_from_spec(spec)
@@ -59,6 +61,24 @@ class ApprovalTests(unittest.TestCase):
                 self.assertFalse(self.valid(payload=payload))
                 # Updating the stored digest does not update the human's approval.
                 self.assertFalse(self.valid(payload=payload, stored_digest=approval.brief_digest(payload)))
+
+    def test_appended_scope_blocks_decoding_and_repaired_scope_needs_approval(self):
+        fields = {'kind': 'brief', 'approval-protocol': 'brief-approval/v1',
+                  'brief-revision': self.payload['revision'], 'requester': self.payload['requester'],
+                  'brief-digest': self.digest, 'brief-url': 'inline',
+                  'groomed-on': self.payload['groomed_on'], 'open-decisions': '0'}
+        extra = '\nChanged acceptance: publish the output.\n'
+        for tracker in ('github', 'ado', 'linear'):
+            with self.subTest(tracker=tracker):
+                original = encode(self.payload['description'], fields, tracker)
+                self.assertEqual(decode(original, tracker)[0], self.payload['description'])
+                self.assertTrue(self.valid())
+                with self.assertRaisesRegex(ValueError, 'after.*block'):
+                    decode(original + extra, tracker)
+                repaired = encode(self.payload['description'] + extra, fields, tracker)
+                human, _ = decode(repaired, tracker)
+                changed = dict(self.payload, description=human)
+                self.assertFalse(self.valid(payload=changed, stored_digest=approval.brief_digest(changed)))
 
     def test_mutable_linked_content_must_be_refetched(self):
         self.payload.update(brief_url='doc:1', linked_content='Approved linked brief')

@@ -1,0 +1,137 @@
+{
+  "schema": "ai-first-predictions/v1",
+  "mode": "independent-offline-agent",
+  "evaluator": "independent Codex agent",
+  "results": [
+    {
+      "id": "mechanical",
+      "scores": [
+        2,
+        2,
+        2,
+        2
+      ],
+      "tier": "delegate",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "The exact isolated transformation and all context are documented; an inspected complete check has a failing negative case. V2 B2 C2 A2 with valid verification derives delegate."
+    },
+    {
+      "id": "bounded-choice",
+      "scores": [
+        2,
+        2,
+        2,
+        1
+      ],
+      "tier": "delegate",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "Only private naming choices remain, bounded by linked conventions and explicit stop conditions. That is A1, with V2 B2 C2 and valid verification, so delegate is permitted."
+    },
+    {
+      "id": "sham-verifier",
+      "scores": [
+        0,
+        2,
+        2,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": false,
+      "hard_override": false,
+      "rationale": "Printing pass checks no acceptance criterion. Completion depends on human judgment, so V0 and verification invalid; the isolated mechanical work with complete context otherwise yields pair. No future validator is counted."
+    },
+    {
+      "id": "missing-context",
+      "scores": [
+        2,
+        2,
+        0,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "Essential owner-held knowledge is inaccessible, so C0 even though the transformation is predetermined and the verifier is valid. Present evidence yields pair; a hoped-for context document provides no uplift."
+    },
+    {
+      "id": "public-contract",
+      "scores": [
+        2,
+        0,
+        2,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": true,
+      "hard_override": false,
+      "rationale": "Touching the public API contract retains B0 despite preapproved design, a mechanical edit, and complete verification. With no hard override and only one zero, the tier is pair."
+    },
+    {
+      "id": "credentials",
+      "scores": [
+        2,
+        0,
+        2,
+        2
+      ],
+      "tier": "human-only",
+      "verification_valid": true,
+      "hard_override": true,
+      "rationale": "Direct production credential handling triggers the secrets/credentials hard override and B0. Fixed steps, complete context, and the inspected completion check do not remove human-only."
+    },
+    {
+      "id": "two-zero",
+      "scores": [
+        0,
+        2,
+        0,
+        0
+      ],
+      "tier": "human-only",
+      "verification_valid": false,
+      "hard_override": false,
+      "rationale": "Success depends on subjective wording, inaccessible stakeholder preference, and an open product decision: V0 C0 A0. Three zero axes require human-only regardless of missing verification."
+    },
+    {
+      "id": "provisional",
+      "scores": [
+        1,
+        2,
+        2,
+        2
+      ],
+      "tier": "pair",
+      "verification_valid": false,
+      "hard_override": false,
+      "rationale": "Existing checks leave a manual acceptance step, so V1 and no complete valid verifier. The proposed exact-version validator is provisional and has no approved uplift; current scores remain pair."
+    },
+    {
+      "id": "small-intake",
+      "route": "small",
+      "create_role": "small",
+      "stop_after": "create-unclassified-item",
+      "next_mode": "single-item",
+      "rationale": "All four small-intake conditions hold and no investigation is needed. Simulate creating one unclassified Sub-issue with the source ask verbatim, then stop. Hand off to a separately human-invoked decompose-and-classify in single-item mode; grooming does not classify or start it automatically."
+    },
+    {
+      "id": "uncertain-create",
+      "create_authorized": false,
+      "action": "stop-for-reconciliation",
+      "rationale": "The durable pending intent records an uncertain server-reaching attempt. Complete inventory absence does not establish noncreation. Preserve the intent and stop; only evidenced pre-create failure or explicit operator reconciliation can establish confirmed-not-created and authorize another attempt."
+    }
+  ],
+  "instruction_notes": [
+    {
+      "source": ".ai-first/ai-first-schema.md section 3, Capability adjustment",
+      "issue": "Raw scoring says to act as if the team had no tooling, while V2 is defined by an existing machine-checkable command. A literal reading could remove ordinary repository tests from raw V.",
+      "resolution": "Count the supplied reviewed existing verification as present task evidence; exclude optional capability uplifts. This follows the capability guide prohibition on counting an already-resolved raw property again as an effect."
+    },
+    {
+      "source": ".ai-first/ai-first-schema.md section 3 and .ai-first/ai-first-capabilities.yml",
+      "issue": "The schema refers to capability invariants C1-C10, while the installed manifest additionally defines C11 and C12.",
+      "resolution": "Apply all installed manifest invariants, including current prerequisites and audit requirements. The skill also states those requirements explicitly. No capability adjustment is authorized in these cases."
+    }
+  ]
+}

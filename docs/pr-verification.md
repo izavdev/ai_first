@@ -48,10 +48,10 @@ if your project has this script:
   "schema": "ai-first-verification/v1",
   "checks": {
     "acceptance": {
-      "argv": ["npm", "run", "test:acceptance"],
+      "argv": ["python", "scripts/check_export.py"],
       "timeout_seconds": 1200,
       "covers": "Inventory CSV export preserves the approved columns and filters",
-      "negative_case": "tests/export.spec.ts: incorrect column order fails the assertion; attach the reviewed failing run"
+      "negative_case": "scripts/check_export.py: incorrect column order fails the assertion; attach the reviewed failing run"
     }
   }
 }
@@ -69,7 +69,16 @@ Run from the repository root:
 python3 .ai-first/ci/verify.py --config .ai-first/ci/verification.json --check acceptance
 ```
 
-Python 3 and Git are required. Add project runtime/dependency setup and services
+Python 3.10 or newer and Git are required. The optional runner supports Linux,
+macOS, and native Windows 10/11 and Windows Server 2016 or newer; WSL is optional.
+On Windows, run from PowerShell with Python and Git on `PATH`:
+
+```powershell
+python .ai-first/ci/verify.py --config .ai-first/ci/verification.json --check acceptance
+```
+
+Use `py -3` if that is how Python is installed, and set the registry's `argv` to an
+executable available in that environment. Add project runtime/dependency setup and services
 before the CI step. The example has no executable command or coverage evidence and
 fails with exit 2 until configured. Unknown IDs, duplicate JSON keys, and old
 unversioned `argv` configs are rejected. To migrate an earlier starter config, wrap
@@ -78,6 +87,11 @@ case. Upgrade the runner and config together.
 
 The runner executes only the selected registry argument array, with no implicit
 shell. It never loads a command from an issue description, PR body, or task snapshot.
+On Windows, `.bat`/`.cmd` files and shell built-ins need an explicitly reviewed shell
+command in the registry, for example `["cmd.exe", "/d", "/c", "npm.cmd run test:acceptance"]`.
+Native executables and Python scripts invoked through Python need no shell. The
+shipped CI templates select Ubuntu; choose a Windows runner/pool and Windows command
+paths when adopting them for a Windows project.
 Do not add extra CLI arguments or shell fragments derived from tracker content.
 Multiple named checks can share a registry; select the appropriate ID in the task
 and CI configuration. Keep every registry command within the job's permitted scope.
@@ -102,17 +116,49 @@ The final `AI_FIRST_RESULT` JSON line records:
 
 - selected check ID and checked-out commit;
 - SHA-256 of the registry, runner, and optional task snapshot;
-- whether the worktree was dirty and its fingerprint;
+- whether the worktree was dirty, its fingerprint, and `worktree_schema`;
 - outcome and command exit status.
 
-Tracked diffs and non-ignored untracked file contents contribute to the fingerprint.
+The `ai-first-worktree/v2` fingerprint reads actual file bytes, executable modes,
+symlink targets, missing tracked paths, index entries, and non-ignored untracked
+files. It does not use diff presentation, text conversion, or clean/smudge filters;
+`assume-unchanged`, `skip-worktree`, and `core.filemode` cannot hide file changes.
+On Linux/macOS, executable modes come from the filesystem. Windows has no Unix
+executable bit, so regular files use their Git index mode (or HEAD mode after a
+staged deletion); index mode changes still invalidate evidence. Real symlinks are
+hashed as links on either platform. A Git symlink checked out as a regular file on
+Windows is fingerprinted as that actual file and counts as dirty.
+Paths tracked by either HEAD or the index remain inputs, including staged deletions.
+Dirty status compares those raw contents and modes with HEAD and the index, so
+checkout filters or line-ending conversions can make a checkout count as dirty
+even when Git status appears clean. Sparse-checkout omissions count as missing,
+dirty inputs. Submodules, non-ignored nested repositories, and unresolved index
+conflicts fail before execution; the runner does not fingerprint nested repositories.
+An explicitly ignored nested repository is outside the evidence boundary, like
+other ignored dependencies.
+
 A dirty local run records its actual state but is not proof that the clean commit
 passes; re-run after committing the final changes. Registry, runner, snapshot, HEAD,
-or worktree changes during a run produce `inputs-changed` and exit 2, even if the
+index, or worktree changes during a run produce `inputs-changed` and exit 2, even if the
 command returned zero. Configure normal test output directories in `.gitignore`
 before adoption, so expected generated reports do not alter those inputs. Ignored
 files, external services, dependencies, and transient changes restored during a run
 are outside this fingerprint; the environment and check coverage remain review responsibilities.
+
+On Linux/macOS, timeout or interruption kills the command's process group and reaps
+the direct child. On Windows, the runner creates the command suspended, assigns it
+to a Job Object, and resumes it only after assignment succeeds. It terminates the
+job's process tree and waits for cleanup before returning, including leftover
+workers after a normal exit. If job assignment is denied by an enclosing host's
+restrictions, verification fails before the check runs.
+
+Checks must wait for their own workers. On Linux/macOS they must not detach workers
+into another session or process group. This handles ordinary descendant cleanup;
+it does not contain a process that deliberately escapes. The runner is not a sandbox.
+
+Upgrade existing runner copies to adopt these fixes. Version 2 fingerprints cannot
+be compared with the earlier diff-based fingerprints; retain the recorded runner
+hash and rerun verification with the updated runner.
 
 Exit codes: 0 success, 1 command failure, 2 configuration/start errors or changed or
 unverifiable inputs, 124 timeout. Output goes to the terminal/build log. Keep the
@@ -185,3 +231,19 @@ These instructions target Azure Repos, not a GitHub repository connected to Azur
 Linear can remain the work tracker while GitHub Actions or Azure Pipelines verifies
 the code repository. No Linear-specific integration is installed by these templates.
 Keep the Linear task link and verification evidence in the PR manually for now.
+
+## Complete local example and integration evidence
+
+The installed-runtime regression in [test_installed_runtime.py](../tests/test_installed_runtime.py)
+exercises a synthetic GitHub comment capture, approval and edit invalidation,
+an uncertain child create, safe resume without duplication, and a copied local
+verification runner. It executes both a passing check and a representative failure
+with an exact task-snapshot digest. This is a deterministic offline integration
+test, not a live tracker run.
+
+For a real task, save its complete current identity, acceptance requirements, and
+parent revision/digest to `task-snapshot.md`; review the snapshot against the tracker.
+Run the inspected check using the `--contract` example above. Retain the snapshot,
+`AI_FIRST_RESULT`, command output, and the new verifier's representative failing
+case with the PR. Human review confirms current code, task equality, coverage, and
+scope. The [pilot procedure](../evaluations/README.md) records live findings separately.
