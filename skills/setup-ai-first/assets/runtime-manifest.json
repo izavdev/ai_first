@@ -1,0 +1,22 @@
+{
+  "schema": "ai-first-runtime/v1",
+  "policy_revision": "ai-first-policy/v1",
+  "package_version": "0.5.0",
+  "files": {
+    "adapter-contract.json": "sha256:50d207e670186fbc9428ba394c8c1b3ffa3c33e0d1dc9bb87e7e8be0b5ab8393",
+    "ai_first/__init__.py": "sha256:b8ff0a39a18172fa1ad1a8f9b3edded893a2b67ee04de153f6fd527eee57e9f1",
+    "ai_first/adapters.py": "sha256:980f19d847e52e6454e6b13ad46a082f9aa6e894be43d6b3d48e012b6cfcb632",
+    "ai_first/capabilities.py": "sha256:56540a8690af91815747859d6fe9e7fe23f1024bb635a3702112f32c4b9e2172",
+    "ai_first/classification.py": "sha256:240d43db9fe905f93ab88b29edb6e605bf15774282e4cca250610bffefdf0cc8",
+    "ai_first/cli.py": "sha256:4f6b379d27a9d145747265c78aa55376b345071e69021e844ff2f879bd270f82",
+    "ai_first/decomposition.py": "sha256:a6fc4656a4f1461b4806c3dd22f677adcd1caa2530fd7d97e8cb7ce75c45abc0",
+    "ai_first/installation.py": "sha256:ce233b9aa20a646b7e61d7dbd2d99389fac83f99e565d1e5509771281225e873",
+    "ai_first/inventory.py": "sha256:a629d0fa8c152cafa0def9eaf5d87c3f3302e4aca7ceb0251b9f060c74eafcd3",
+    "ai_first/schema.py": "sha256:2583b0ef43fffe12768ff8e9d51d12806ddc4106b6727c36a8bb422f7c220c7e",
+    "ai_first/version.py": "sha256:0acf18bfc7abc31d3e2d8bc5099d177a345b3fbfb6f6d3228facd67b77d3535c",
+    "ai_first/workflow.py": "sha256:0897eec9ef2fe95f4e7cc6949d2a9c6a9a11681059c62304ba5dd6c323bff4d7",
+    "approval.py": "sha256:bd142e86db5e1f63afb1d42ddb570c6e88853dc93a4bf97d084d6acddf0fe8e5",
+    "policy.py": "sha256:694ce1a026093e79175b63dd92ef39bbf896379866f65a90f9d6979aa2b5538e",
+    "workflow-contract.json": "sha256:655213d0518500c83e7fa1e9806935d0687228cfa81590cc5869398f61f5e63e"
+  }
+}

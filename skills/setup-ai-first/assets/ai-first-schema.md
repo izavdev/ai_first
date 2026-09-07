@@ -1,6 +1,13 @@
 # AI-First Workflow Schema (v1)
 
+<!-- ai-first-policy: ai-first-policy/v1 -->
+
 The shared contract between the `groom` skill, the `decompose-and-classify` skill, PR validation, and any tracker-specific enforcement integration. Every consumer reads and writes the same structures. Version bumps to the sentinel (`[ai-first:v2]`) require updating every consumer.
+
+Consumers must implement `ai-first-policy/v1`. Run the installed `policy.py doctor`
+with that required revision before workflow writes. The description sentinel versions
+the item encoding; the separate policy revision and runtime receipt govern consumer
+compatibility. See installed `runtime-guide.md` for command inputs and upgrade checks.
 
 ## 1. Tags (visible layer, filterable)
 
@@ -286,7 +293,7 @@ may record `confirmed-not-created` and permit another attempt. Search absence al
 is not proof: trackers may be eventually consistent.
 
 Reconciliation reads complete plan/reference/intent history, parent relationships, and a
-container inventory covering every state. Compare exact keys in fetched bodies;
+container inventory covering every state. The installed runtime guide permits reuse of unchanged bodies only behind fresh complete ID listings and proven strong item revisions; otherwise fetch all bodies. This optimization preserves the inventory boundary and does not authorize uncertain retries. Compare exact keys in the resulting complete bodies;
 a search snippet, title match, or parent child list alone is insufficient. A single
 match is reused, including a closed child (do not reopen it). Conflicting snapshots
 of one canonical item ID block reconciliation even if their unit keys differ or a
@@ -314,7 +321,7 @@ progress from actual items and intents. No automatic retry deletes or recreates 
 ### 2.3 Parsing rules (all consumers)
 
 The installed `workflow-contract.json` is the machine-readable field/type inventory.
-The reference codec is `src/ai_first/schema.py` in the package source. It accepts
+The installed codec is `ai_first/schema.py`, invoked through `policy.py decode` and `policy.py encode`. Source tests use this same distributable code. It accepts
 tracker-normalized Markdown; an adapter must decode ADO HTML or other storage formats
 before using it. The fixtures test these documented encodings, not live vendor storage.
 
@@ -411,9 +418,9 @@ mechanical work. Missing required context also prevents C=2.
 
 ### Capability adjustment (between scoring and derivation)
 
-Score the execution item on its raw properties FIRST, as if the team had no tooling.
+Score the execution item on its raw properties FIRST, using already available, inspected repository tests, context, and conventions. Exclude proposed capability uplifts at this stage; do not pretend existing acceptance tests are absent. An already-resolved raw property cannot earn the same capability effect again.
 Then read `ai-first-capabilities.yml`, scan the project-local custom-skill metadata
-roots it declares, and apply effects subject to invariants C1-C10 in the manifest.
+roots it declares, and apply effects subject to invariants C1-C12 in the manifest.
 Inline entries must be enabled and proven. Discovered `ai-first-capability.yml`
 metadata must additionally have an exact enabled, proven central approval for its
 ID and version. Effects apply only where a task class matches `covers`; at most +1

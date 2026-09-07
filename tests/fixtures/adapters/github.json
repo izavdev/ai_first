@@ -1,0 +1,40 @@
+{
+  "tracker": "github",
+  "pages": [
+    {
+      "request_cursor": null,
+      "data": [
+        {
+          "id": 1,
+          "body": "original",
+          "user": {
+            "login": "Reviewer",
+            "type": "User"
+          },
+          "created_at": "2026-09-07T10:00:00Z",
+          "updated_at": "2026-09-07T10:00:00Z"
+        }
+      ],
+      "next_cursor": "page-2"
+    },
+    {
+      "request_cursor": "page-2",
+      "data": [
+        {
+          "id": 2,
+          "body": "edited",
+          "user": {
+            "login": "Reviewer",
+            "type": "User"
+          },
+          "created_at": "2026-09-07T10:00:01Z",
+          "updated_at": "2026-09-07T10:10:00Z"
+        }
+      ],
+      "next_cursor": null
+    }
+  ],
+  "human_ids": [
+    "reviewer"
+  ]
+}

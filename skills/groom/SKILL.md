@@ -7,16 +7,24 @@ description: Turn a raw ask or tracker item into an approval-ready AI-first brie
 
 User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. The guard clauses guide this invoked session. Direct tracker edits and merges outside the workflow are not automatically blocked; tracker enforcement and required CI checks are optional, separately deployed integrations.
 
-Turns a raw item into a groomed brief that a human can approve. This skill PLANS and CLARIFIES. It does not decompose, does not create small execution items, and never writes code. Its output is a brief plus labels; its exit hands off to a human approver, then to `decompose-and-classify`.
+Turns a raw item into a groomed brief that a human can approve. This skill PLANS and CLARIFIES. It never decomposes a brief or writes code. Intake may create one unclassified small item under the explicit small-item exception below; classification is a separate human-invoked handoff. Its output is a brief plus labels; its exit hands off to a human approver, then to `decompose-and-classify`.
 
 Require `.ai-first/approval.py`; if absent, rerun setup to install the revision-bound approval protocol. Before doing anything else, read `.ai-first/README.md`, `.ai-first/terminology.md`, `.ai-first/ai-first-schema.md`, and `.ai-first/tracker.md` from the current project. If any is missing, stop and tell the user to install and run `setup-ai-first`. Use the configured large, regular, and small terms in all user-facing text and tracker item types. The tracker file explains which tools to call, how labels are read and written, and how approval identity is checked.
 
+
+Run `python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1` before
+workflow writes (`python` on Windows). Missing command, nonzero exit, or incompatible
+files require setup reconciliation. Review any `unrecorded_changes` against current
+project policy; never reset them automatically. Read the relevant command section
+of `.ai-first/runtime-guide.md` when preparing helper inputs. Inputs are JSON data
+files; remote facts and human judgments still come from inspected evidence.
+
 ## Intake and sizing triage
 
-Input is either an item (ID or URL) OR a raw ask: a pasted email, DM, or thread ("could you add support of X to Y", "check this customer issue", "just a small feature for Z"). For raw asks, run triage BEFORE any grooming, in this order, first match wins:
+Input is either an item (ID or URL) OR a raw ask: a pasted email, DM, or thread ("could you add support of X to Y", "check this customer issue", "just a small feature for Z"). For raw asks, establish the six intake booleans from the request and run `policy.py intake` before any grooming. Its routing follows this order, first match wins:
 
 1. **Investigation** - it is not yet known whether any work on our side is needed (customer issues, "please check if..."). Do NOT create an item. Run a bounded research pass: query docs MCPs, linked systems, and the repo; answer the question or produce findings. If work turns out to be needed, re-triage the remaining ask with what was learned.
-2. **Small** - one outcome, one touched surface, machine-checkable definition of done, zero judgment calls. Create an item using the configured small term and hand off to `decompose-and-classify` in single-item mode. All four conditions must hold; if any is uncertain, fall through.
+2. **Small** - one outcome, one touched surface, machine-checkable definition of done, zero judgment calls. Create an item using the configured small term and stop with a handoff to `decompose-and-classify` in single-item mode. Do not classify it, apply a tier, or start the next skill automatically. All four conditions must hold; if any is uncertain, fall through.
 3. **Large** - more than one destination, or the touched surfaces cannot be named yet, or the route is foggy enough that a multi-session planning effort is warranted. Recommend splitting it into regular items first; groom each regular item separately. Do not groom a large item as if it were regular.
 4. **Regular** - everything else. Create an item using the configured regular term and proceed to grooming below.
 
@@ -50,7 +58,7 @@ Track unresolved judgment calls as **open decisions**. Do not resolve them yours
 ## Output
 
 1. Write the brief into the item's description (or a linked document if the team convention is set), structured as: Destination / Constraints / Touched surfaces / Definition of done / Out of scope / Human-only list / Open decisions.
-2. Confirm the request owner's canonical human tracker identity; do not substitute the item's automation creator. Generate a fresh UUID for `brief-revision` on every grooming, including re-grooming with unchanged text. Append the parent block per schema 2.1 with `approval-protocol: brief-approval/v1`, the verified `requester`, and the real `open-decisions` count. Remove any approval label before changing the brief. Persist the brief, re-fetch its stored representation and any linked brief content, and calculate `brief-digest` with `.ai-first/approval.py` per the schema. Write that digest, then re-fetch and verify it still matches. Never invent a digest. If the helper, identity tools, or linked content are unavailable, stop and report the missing prerequisite; do not announce an approval-ready brief.
+2. Confirm the request owner's canonical human tracker identity; do not substitute the item's automation creator. Generate a fresh UUID for `brief-revision` on every grooming, including re-grooming with unchanged text. Append the parent block per schema 2.1 with `approval-protocol: brief-approval/v1`, the verified `requester`, and the real `open-decisions` count. Remove any approval label before changing the brief. Persist the brief, re-fetch its stored representation and any linked brief content, and calculate `brief-digest` with `policy.py snapshot` from the complete persisted body, title, identity, and fetched linked content. Use `policy.py encode` for the validated block; never omit body text when constructing a payload. Write that digest, then re-fetch and verify it still matches. Never invent a digest. If the helper, identity tools, or linked content are unavailable, stop and report the missing prerequisite; do not announce an approval-ready brief.
 3. Apply labels `ai-first` and `groomed`.
 4. Show the exact one-line APPROVED record with the computed revision and digest for the human to post after reviewing the persisted snapshot. Explain that both the manual label and this new comment are required on every tracker. Never post the approval record on their behalf. NEVER apply `brief-approved`. Read the schema's project approval policy. In independent mode, post a comment naming the suggested independent approver. In solo mode, name the configured human and explain that they must review and manually self-approve the brief using the tracker's approval mechanism. In both modes, state that decomposition remains blocked until valid approval and zero open decisions; never auto-approve because solo mode is enabled.
 

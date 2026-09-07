@@ -231,3 +231,19 @@ These instructions target Azure Repos, not a GitHub repository connected to Azur
 Linear can remain the work tracker while GitHub Actions or Azure Pipelines verifies
 the code repository. No Linear-specific integration is installed by these templates.
 Keep the Linear task link and verification evidence in the PR manually for now.
+
+## Complete local example and integration evidence
+
+The installed-runtime regression in [test_installed_runtime.py](../tests/test_installed_runtime.py)
+exercises a synthetic GitHub comment capture, approval and edit invalidation,
+an uncertain child create, safe resume without duplication, and a copied local
+verification runner. It executes both a passing check and a representative failure
+with an exact task-snapshot digest. This is a deterministic offline integration
+test, not a live tracker run.
+
+For a real task, save its complete current identity, acceptance requirements, and
+parent revision/digest to `task-snapshot.md`; review the snapshot against the tracker.
+Run the inspected check using the `--contract` example above. Retain the snapshot,
+`AI_FIRST_RESULT`, command output, and the new verifier's representative failing
+case with the PR. Human review confirms current code, task equality, coverage, and
+scope. The [pilot procedure](../evaluations/README.md) records live findings separately.

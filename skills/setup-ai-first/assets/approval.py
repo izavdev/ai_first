@@ -94,8 +94,13 @@ def approval_valid(payload, stored_digest, records, *, label_present,
     if latest is None:
         return False
     action, signed_digest, actor = latest
+    requester = payload['requester']
+    if payload['item'].startswith('github:'):
+        # GitHub login equality is case-insensitive; hashing preserves stored text.
+        actor, requester = actor.casefold(), requester.casefold()
+        solo_identity = solo_identity.casefold() if isinstance(solo_identity, str) else solo_identity
     return (action == 'APPROVED' and signed_digest == digest
-            and (actor != payload['requester'] or actor == solo_identity))
+            and (actor != requester or actor == solo_identity))
 
 
 if __name__ == '__main__':

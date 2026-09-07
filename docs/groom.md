@@ -94,3 +94,12 @@ Then explicitly invoke [decompose-and-classify](decompose-and-classify.md) with 
 | Brief is approved but must change | Re-groom explicitly, then obtain fresh approval under the project policy. |
 
 Source: [groom/SKILL.md](../skills/groom/SKILL.md).
+
+## Installed policy commands
+
+Grooming runs the installed `doctor` before writes and `intake` after establishing
+raw-request sizing facts. A small intake may create one unclassified item and stops
+for the explicit single-item handoff; grooming never assigns its tier or starts the
+next skill automatically. Brief persistence uses `encode` and `snapshot`, which
+parses the complete stored description before hashing it. See the
+[runtime guide](../skills/setup-ai-first/assets/runtime-guide.md) for JSON input shapes.

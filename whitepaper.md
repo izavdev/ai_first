@@ -330,8 +330,9 @@ structured rather than prose, listing for each tool, MCP, resource, context
 retrieval, validator, skill, or agent what problem classes it `covers` and which
 axis it affects. The shipped manifest enables no score-changing capability: the
 team fills it through an evidence-guided review. The classifier scores each
-execution item raw first - as if the team had no tooling - and only then applies
-manifest effects. That ordering matters: anchoring on available tooling before
+execution item raw first using its already available, inspected tests, context,
+and conventions, and only then applies eligible manifest effects. Existing evidence
+is not removed from raw scoring and the same benefit is never counted twice. That ordering matters: anchoring on available tooling before
 assessing the item is exactly how tiers inflate.
 
 A custom skill may advertise its behavior in an `ai-first-capability.yml` beside

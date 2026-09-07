@@ -157,3 +157,18 @@ writes must be reconciled against the current item state.
 | Discovered metadata is ignored | Check the parent summary for malformed, conflicting, mismatched, or unapproved claims; review central approval. |
 
 Source: [decompose-and-classify/SKILL.md](../skills/decompose-and-classify/SKILL.md).
+
+## Executable policy checks
+
+Version 0.5.0 requires the installed policy runtime. The skill runs `doctor`, parses
+persisted blocks with `decode`, checks current approval with `check-brief`, and uses
+`adjust-scores`, `classify`, and `reclassify` for derived decisions. Resuming a plan
+uses `select-plan`, `unit-key`, and `reconcile`. Human judgments and authenticated
+tracker facts remain inputs, not claims that a passing helper authenticates.
+See the [runtime guide](../skills/setup-ai-first/assets/runtime-guide.md).
+
+Large containers may reuse unchanged bodies only with fresh complete ID listings
+and authoritative strong revisions through `inventory`. ADO numeric revisions may
+qualify after connection validation. Timestamps alone do not. Missing or uncertain
+revision support means fetching all bodies. Complete inventory, fresh approval,
+creation intents, and serialization requirements continue to apply.

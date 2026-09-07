@@ -8,8 +8,8 @@ Licensed under the [MIT License](LICENSE).
 
 ## What is available now
 
-The package ships four workflow skills, a revision/digest approval helper, and a
-reference classifier with tests. Skills guide invoked sessions; they do not monitor
+The package ships four workflow skills and a portable policy runtime for approval,
+classification, parsing, capability evaluation, and retry reconciliation. Skills guide invoked sessions; they do not monitor
 all tracker changes or prevent merges outside the workflow.
 
 Delegate work requires actual verification and human review of its evidence.
@@ -118,6 +118,34 @@ the configured project-local skill roots, but metadata is only a claim: it has n
 effect until a user adds an exact ID/version approval to the central project
 manifest. This prevents an installed skill from declaring itself proven.
 
+## Installed runtime and compatibility
+
+Version 0.5.0 installs the tested policy runtime with the skills. Rerun setup to
+copy `policy.py`, `ai_first/`, the runtime manifest/guide, and adapter contract;
+reconcile existing customizations and generate the v2 installation receipt. Before
+workflow writes, skills run:
+
+```bash
+python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1
+```
+
+The helper parses complete persisted briefs, derives tiers, evaluates approval
+records using local solo policy, and reconciles retry inventory. It never calls
+trackers or executes item commands. See the [runtime command guide](skills/setup-ai-first/assets/runtime-guide.md).
+The `src.ai_first` import path remains a development compatibility shim to the same
+shipped implementation; it contains no second policy implementation.
+
+Adapter preflight records the actual connection's capabilities and server version.
+Missing pagination, identity, or storage metadata blocks normal decomposition.
+Synthetic adapter fixtures are not live compatibility certification. A revision
+cache can reduce repeated body downloads when the connection provides authoritative
+strong item revisions; complete listings and uncertain-create rules still apply.
+
+See [evaluation and pilot instructions](evaluations/README.md) for blind behavioral
+cases, captured-workflow tests, and the inventory workload benchmark. The
+[review follow-up](docs/review-followup.md) distinguishes implemented changes from
+live validation still required.
+
 ## Solo developers
 
 During `setup-ai-first`, select solo development and confirm your canonical tracker
@@ -188,7 +216,7 @@ A plain validation run never rewrites files. `--refresh` updates generated metad
 not plugin versions or approvals. Setup uses the source manifest to write an
 installation receipt with source and final installed hashes, preserving customizations.
 
-The reference modules under `src/ai_first/` cover classification, capability evidence,
+The runtime modules under `skills/setup-ai-first/assets/ai_first/` cover classification, capability evidence,
 mode/escalation transitions, decomposition retries, and description parsing. Tests
 cover all 81 score combinations, approval revisions, verification evidence, and
 tracker-normalized Markdown round trips. They can also run independently without

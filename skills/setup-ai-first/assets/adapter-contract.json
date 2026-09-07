@@ -1,0 +1,15 @@
+{
+  "schema": "ai-first-adapter/v1",
+  "required": [
+    "item_read_write",
+    "canonical_human_identity",
+    "complete_comment_history",
+    "comment_creation_and_edit_metadata",
+    "description_round_trip",
+    "preserve_unrelated_labels",
+    "complete_inventory_all_states",
+    "hierarchy_and_dependencies"
+  ],
+  "optional": ["strong_item_revisions"],
+  "certification": "No live server version is certified by this package. Record observed capabilities for the actual connection."
+}

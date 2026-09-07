@@ -1,0 +1,21 @@
+{
+  "schema": "ai-first-evaluation-result/v1",
+  "mode": "independent-offline-agent",
+  "evaluator": "independent Codex agent",
+  "total": 10,
+  "submitted": 10,
+  "exact_matches": 9,
+  "exact_match_rate": 0.9,
+  "unsafe_delegations": [],
+  "failures": [
+    {
+      "id": "uncertain-create",
+      "mismatches": [
+        "action"
+      ]
+    }
+  ],
+  "median_duration_seconds": null,
+  "median_human_review_seconds": null,
+  "reference_status": "Draft rubric-derived reference answers; maintainer calibration pending; not production telemetry."
+}

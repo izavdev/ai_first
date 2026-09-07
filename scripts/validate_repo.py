@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'skills/setup-ai-first/assets'
 MANIFEST = ASSETS / 'asset-manifest.json'
 sys.path.insert(0, str(ROOT))
+from src.ai_first import PACKAGE_VERSION, POLICY_REVISION
 
 
 def unique(pairs):
@@ -42,6 +43,15 @@ def contract_table():
         for field, rule in contract[scope].items():
             lines.append(f'| {scope} | `{field}` | `{rule}` |')
     return '\n'.join(lines)
+
+
+def runtime_manifest():
+    paths = [ASSETS / name for name in ('policy.py', 'approval.py', 'workflow-contract.json', 'adapter-contract.json')]
+    paths += sorted((ASSETS / 'ai_first').glob('*.py'))
+    return dict(schema='ai-first-runtime/v1', policy_revision=POLICY_REVISION,
+                package_version=read_json(ROOT / '.codex-plugin/plugin.json')['version'],
+                files={p.relative_to(ASSETS).as_posix(): 'sha256:'+hashlib.sha256(p.read_bytes()).hexdigest()
+                       for p in sorted(paths)})
 
 
 def check(condition, message):
@@ -75,9 +85,13 @@ def main():
     wanted = '\n' + contract_table() + '\n'
     if args.refresh:
         schema.write_text(before + start + wanted + end + after, encoding='utf-8', newline='\n')
+        (ASSETS / 'runtime-manifest.json').write_text(json.dumps(runtime_manifest(), indent=2)+'\n',
+                                                    encoding='utf-8', newline='\n')
         MANIFEST.write_text(json.dumps(asset_manifest(), indent=2, ensure_ascii=False)+'\n',
                             encoding='utf-8', newline='\n')
     else:
+        check(read_json(ASSETS / 'runtime-manifest.json') == runtime_manifest(),
+              'Runtime hashes drifted; review changes then use --refresh')
         check(current == wanted, 'Contract field table drift; review changes then use --refresh')
         check(MANIFEST.exists() and read_json(MANIFEST) == asset_manifest(),
               'Shipped asset hashes drifted; review changes then use --refresh')
@@ -87,6 +101,7 @@ def main():
     claude = read_json(ROOT / '.claude-plugin/plugin.json')
     codex = read_json(ROOT / '.codex-plugin/plugin.json')
     check(claude['version'] == codex['version'], 'Plugin versions differ')
+    check(codex['version'] == PACKAGE_VERSION, 'Runtime and plugin versions differ')
     skills = sorted(ROOT.glob('skills/*/SKILL.md'))
     check({(ROOT / path).resolve() for path in claude['skills']} == {p.parent.resolve() for p in skills}, 'Claude skill paths differ from package')
     check((ROOT / codex['skills']).resolve() == (ROOT / 'skills').resolve(), 'Codex skills path invalid')

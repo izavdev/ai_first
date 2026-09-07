@@ -1,5 +1,7 @@
 # Tracker adapter: ADO
 
+<!-- ai-first-policy: ai-first-policy/v1 -->
+
 Resolves `ai-first-schema.md`'s tracker-neutral terms to Azure DevOps' actual API surface.
 Read this alongside the schema before a skill session writes anything to ADO.
 
@@ -18,9 +20,13 @@ Use the ADO MCP. Fetch by ID or URL. Create items with the work item types recor
 
 ## Labels
 
-ADO tags are added/removed individually (no read-modify-write needed - the API is
-additive/subtractive per tag, unlike a full-set replace). Apply and remove tags via the ADO
-MCP's tag-update call.
+Use the connected server's actual work-item patch operation; do not assume a
+separate tag-update tool exists. Read `System.Tags` and numeric `rev`, compute the
+complete desired set preserving unrelated tags, and use `policy.py tag-patch` to
+produce a `/rev` test followed by the field update. Selective removal must not
+remove the entire tag field. Apply the patch together; on a revision conflict,
+re-read and recompute. Never turn the policy helper's output into a shell command.
+See [the REST update contract](https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/update?view=azure-devops-rest-7.1).
 
 ## Linked documents
 
@@ -51,7 +57,7 @@ The `requester:` field identifies the verified human request owner, regardless o
 which account created the item. Confirm that identity during grooming and require
 the reviewer to confirm ownership; never infer it from an automation creator.
 
-Fetch all comments, including every page and the metadata needed to resolve canonical human authors, creation order, and edits. Use work-item revisions to obtain a stable description snapshot when available. Tag-adding revisions alone no longer constitute approval.
+Fetch all comments, including every page and the metadata needed to resolve canonical human authors, creation order, and edits. Inspect pagination in the actual tool: a `top` argument alone is insufficient when a continuation token is returned. If the MCP cannot request subsequent pages, use an already-authorized authenticated REST client with the [Comments API](https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/comments/get-comments?view=azure-devops-rest-7.1), passing each `continuationToken` until exhausted. Do not install/authenticate a new integration implicitly. If neither route can retrieve the complete history, report this connection as unsupported for normal decomposition. Use work-item revisions to obtain a stable description snapshot when available. Tag-adding revisions alone no longer constitute approval.
 
 Decode the persisted title, human description, and brief fields, and freshly fetch
 linked brief content before computing the digest using installed `approval.py`.
@@ -83,3 +89,15 @@ stop before creating more items. After an uncertain create response, reconcile b
 key and preserve a pending intent until the outcome is established. A zero-result
 search alone does not authorize retry. Serialize decomposition when the tracker
 cannot guarantee concurrent create idempotency; report that limitation explicitly.
+
+## Connection conformance
+
+Use installed `adapter-contract.json` and `policy.py adapter-check` to report the
+actual connection's supported operations and observed server/client version.
+The shipped tests use synthetic API-shaped captures; no live server version is
+certified. Normalize complete approval pages with `policy.py history` per
+`runtime-guide.md`. Verify the stored description round trip through `policy.py
+decode`; HTML or MCP-specific normalization requires an explicit reviewed mapping.
+For body caching, use `policy.py inventory` only with fresh complete listings and
+proven strong revisions; a timestamp is not a revision guarantee. All uncertainty
+falls back to complete body fetches or a blocked operation, never guessed evidence.

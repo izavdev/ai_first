@@ -36,6 +36,11 @@ The target repository should contain:
 ├── ai-first-schema.md
 ├── workflow-contract.json
 ├── installation.json
+├── policy.py
+├── ai_first/
+├── runtime-manifest.json
+├── runtime-guide.md
+├── adapter-contract.json
 ├── ai-first-capabilities.yml
 ├── capabilities-guide.md
 ├── plan-storage.md
@@ -55,8 +60,22 @@ Setup copies the machine-readable field contract with the schema and writes
 tracker/path mapping, and source commit/dirty status when known. Source and installed
 hashes are separate so team customizations are visible. An unknown source commit
 is recorded as null; the verified asset hashes still identify the copied content.
+Setup now runs `policy.py record-installation` to generate a v2 receipt from
+reviewed files, then `policy.py doctor --require-policy ai-first-policy/v1` to check
+compatibility. Legacy v1 receipts require setup reconciliation; changing the receipt's
+version by hand is insufficient. See the [runtime guide](../skills/setup-ai-first/assets/runtime-guide.md).
 On reruns, compare the receipt and current files before reconciling updates. The
 receipt is an audit aid, not a permission to overwrite customized configuration.
+
+## Check tracker capabilities
+
+Setup records observed connection details in `.ai-first/adapter-evidence.json` and
+runs `policy.py adapter-check` before declaring normal decomposition ready. Missing
+capabilities can leave local installation complete while tracker use remains pending.
+The package does not certify a live server version. ADO connections must support
+complete comment pagination or use an already-authorized REST fallback. Tag changes
+preserve unrelated tags and bind to a fetched revision. Storage normalization and
+human identity evidence must be inspected on the actual connection.
 
 ## Choose where plans live
 

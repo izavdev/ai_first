@@ -12,7 +12,7 @@ import uuid
 from .classification import classify
 from .decomposition import unit_key
 
-CONTRACT_PATH = Path(__file__).resolve().parents[2] / 'skills/setup-ai-first/assets/workflow-contract.json'
+CONTRACT_PATH = Path(__file__).resolve().parent.parent / 'workflow-contract.json'
 CONTRACT = json.loads(CONTRACT_PATH.read_text(encoding='utf-8'))
 TIERS = {'human-only': 0, 'pair': 1, 'delegate': 2}
 

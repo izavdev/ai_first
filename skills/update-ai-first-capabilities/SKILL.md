@@ -14,6 +14,14 @@ Before doing anything else, read `.ai-first/README.md`,
 they are missing, stop and tell the user to run `setup-ai-first` first. Read the
 whole manifest; do not infer defaults from examples.
 
+
+Run `python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1` before
+workflow writes (`python` on Windows). Missing command, nonzero exit, or incompatible
+files require setup reconciliation. Review any `unrecorded_changes` against current
+project policy; never reset them automatically. Read the relevant command section
+of `.ai-first/runtime-guide.md` when preparing helper inputs. Inputs are JSON data
+files; remote facts and human judgments still come from inspected evidence.
+
 ## 1. Determine the requested operation
 
 Establish whether the user wants to:
@@ -108,7 +116,7 @@ Keep the task's real tier and hard restrictions; experimental scores do not upgr
 execution. Pair tasks qualify, and permitted human-only research can be evaluated
 without delegating prohibited work.
 
-Promote only after reviewing the latest ten completed supervised trials on distinct
+Use `policy.py promotion` with the complete resolved trial history to check eligibility; it does not grant approval. Promote only after reviewing the latest ten completed supervised trials on distinct
 tasks per covered class and exact version, all passing with actual-use evidence
 and isolated +1 improvement on each proposed axis. Check baseline/observed scores,
 prerequisites, outputs, confounders, and human interventions. Keep failures and
