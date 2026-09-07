@@ -12,6 +12,12 @@ SPEC.loader.exec_module(validator)
 
 
 class RepositoryValidationTests(unittest.TestCase):
+    def test_repository_json_is_utf8_independent_of_system_encoding(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'contract.json'
+            path.write_bytes('{"title":"café 日本語"}'.encode('utf-8'))
+            self.assertEqual(validator.read_json(path), {'title': 'café 日本語'})
+
     def test_duplicate_json_keys_are_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / 'contract.json'

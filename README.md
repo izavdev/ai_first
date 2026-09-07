@@ -4,6 +4,8 @@ Poka-yoke skills for AI-assisted delivery: groom the request, require human appr
 
 The repository is now a portable Agent Skills package. There is no generation step and no agent-specific copy to keep in sync.
 
+Licensed under the [MIT License](LICENSE).
+
 ## What is available now
 
 The package ships four workflow skills, a revision/digest approval helper, and a
@@ -104,6 +106,12 @@ Existing installations must rerun setup to reconcile the updated project-local
 schema and capability profile routing before using this policy. The description
 block remains `[ai-first:v1]`; its field format has not changed.
 
+Version 0.4.1 rejects non-whitespace text after the description block and conflicting
+snapshots of the same canonical child. Upgrade installed schemas and parsing
+consumers together; preserve trailing edits for explicit repair, re-grooming, and
+fresh brief approval. If using the optional verification runner, replace its copy
+too and rerun checks to obtain the new file-content fingerprint.
+
 Custom skills can advertise classification-relevant behavior in an
 `ai-first-capability.yml` beside their `SKILL.md`. `decompose-and-classify` scans
 the configured project-local skill roots, but metadata is only a claim: it has no
@@ -142,18 +150,31 @@ do not satisfy `brief-approval/v1`. See [approval instructions](docs/groom.md#ob
 
 Edit the four `SKILL.md` files and the setup assets directly. Validate all skills and both plugin manifests before releasing. Bump both plugin versions together.
 
-Run all repository checks with Python 3:
+Use Python 3.10 or newer. The repository CI matrix covers Python 3.10 and 3.13 on
+Linux, macOS, and Windows. The optional verification runner supports native Windows
+without WSL; see its [execution boundary](docs/pr-verification.md).
+
+Run all repository checks:
 
 ```bash
 python3 -m pip install -r requirements-dev.txt
 python3 scripts/validate_repo.py
 ```
 
+On Windows, run the same commands in PowerShell using `python` instead of `python3`
+(or `py -3` outside a virtual environment). Install Git and make it available on
+`PATH`. Repository text files use UTF-8 and Git checks them out with LF line endings
+on every platform so shipped asset hashes remain consistent.
+
 This validates skill front matter, native manifest versions/paths, strict JSON/YAML,
 local documentation link targets, capability defaults/profile routing, generated
 contract fields, shipped asset hashes, and the complete regression suite. It makes
 no network requests and does not enable CI or enforce tracker/PR state. Live tracker
 compatibility and external links require separate integration checks.
+
+[Repository CI](.github/workflows/validate.yml) runs this same validator on pushes
+and pull requests. This validates the package itself; the optional consumer PR
+verification templates remain dormant until separately adopted.
 
 After reviewing intentional changes to setup assets or contract fields, refresh the
 field table and source hash manifest, inspect the generated diff, then validate again:

@@ -156,12 +156,17 @@ The large item contains multiple independently groomed regular items. The regula
 
 Use real file copies, not symlinks. Plugin caches and cross-agent skill installers may not preserve symlinks.
 
-Install `approval.py` as a real copy alongside the schema. It requires Python 3
+Install `approval.py` as a real copy alongside the schema. It requires Python 3.10 or newer
 and no external packages. On upgrades, reconcile schema, helper, and active adapter
 together. Explain that every consumer must support `brief-approval/v1`; existing
 briefs need re-grooming and fresh approval, and label-only/bare-marker grants are
 not migrated automatically. Preserve historical comments for audit. Do not grant
 approval or rewrite historical grants during setup.
+
+For upgrades to 0.4.1, reconcile the stricter trailing-content parsing rule and the
+canonical-child conflict rule with every consumer. Text after a schema block now
+requires explicit repair, with re-grooming and fresh approval for changed briefs.
+Do not automatically remove that text or rewrite tracker items during setup.
 
 ### Record the installed asset revision
 

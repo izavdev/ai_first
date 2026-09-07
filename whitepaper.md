@@ -52,7 +52,7 @@ The three delegation tiers are the heart of the system:
 
 | Tier | Execution mode | Review depth |
 |---|---|---|
-| `ai-delegate` | An agent executes in a cold session; CI runs the item's verification command | Human skims: acceptance criteria met, verification green, no out-of-scope changes |
+| `ai-delegate` | An agent executes in a cold session; verification runs locally or in optional CI | Human reviews acceptance coverage, verification evidence, and scope; depth follows team policy |
 | `ai-pair` | AI drafts, a human steers the session and owns every decision | Normal peer review |
 | `human-only` | A person decides and executes; AI may research and prototype | Deep review as the team's standard requires |
 
@@ -64,7 +64,7 @@ flowchart TD
     B["/groom<br/>interrogation to brief + tags"]
     C{{"Gate 1: brief sign-off<br/>independent or configured solo approver"}}
     D["/decompose-and-classify<br/>small execution items + tier + verify command"]
-    E["ai-delegate<br/>agent executes, CI verifies"]
+    E["ai-delegate<br/>agent executes, local or optional CI verification"]
     F["ai-pair<br/>AI drafts, human steers"]
     G["human-only<br/>person executes, AI researches"]
     H{{"Gate 2: PR review<br/>depth set by tier, review evidence"}}
@@ -94,7 +94,7 @@ flowchart TD
     class A,I plain
 ```
 
-*Purple: skill invocations. Teal: human gates. The dotted loop is the automatic escalation (andon) path.*
+*Purple: skill invocations. Teal: human gates. The dotted loop requires explicit reclassification with failure evidence; no background escalation service is shipped.*
 
 ### Where state lives
 
@@ -289,7 +289,7 @@ Three norms complete the system, and they fit on an index card:
 ### How-to 6: Review a PR by tier
 
 1. Read the task tier, acceptance criteria, tested commit, and verification evidence. Use the optional CI result when available.
-2. `ai-delegate`: confirm verification is green, acceptance criteria are met, and no files outside the item's scope changed. Do not line-by-line review verified mechanical work; that defeats the economics of the tier.
+2. `ai-delegate`: confirm verification is green for the current code and task snapshot, acceptance criteria are covered, and no changes exceed the item's scope. Inspect representative failing-case evidence for new or changed checks. Adjust review depth to demonstrated coverage, the actual diff, and team policy; the tier alone does not justify skipping code review.
 3. `ai-pair`: normal peer review. The human who steered the session owns the decisions; review them as you would any colleague's.
 4. `human-only`: full-depth review per team standard.
 5. If the diff does not match the tier (a "delegate" PR full of judgment calls), that is a tier challenge - raise it on the execution item, not just the PR.
@@ -346,7 +346,12 @@ itself a more favorable classification.
 The project manifest's `profile_routing` data selects execution profiles. See the
 [capability guide](skills/setup-ai-first/assets/capabilities-guide.md) for policy and configuration.
 
-Model selection joins the same indirection. Execution items record a *profile* (deep-planning, bulk-mechanical, triage) and the manifest resolves profiles to models, because model names churn far faster than work items live - an upgrade should be a one-line edit, not a rewrite of a year of history. Profile selection then needs no new judgment, because it falls out of scores the classifier already computed: where verifiability is maximal, a cheap model is rational, since a wrong answer is caught mechanically before it costs anything. Where verifiability is weak, you are relying on the model's judgment and should pay for it. **Verification, not model capability, is what makes cheap models safe.**
+Execution items record a *profile* (deep-planning, bulk-mechanical, triage), and the
+manifest resolves profiles to models. This lets a team update model choices without
+rewriting historical items. Routing follows the recorded scores and project policy.
+A lower-cost model may be appropriate for bounded work with demonstrated verification
+coverage, but a passing check alone cannot establish that coverage or eliminate the
+cost of mistakes. Evaluate model choices using delivery outcomes and reviewer feedback.
 
 > **The failure mode to design against is capability inflation.** Everyone believes their new skill works, and a manifest built on belief would quietly upgrade tiers across the board. Two devices prevent it. Entries start *provisional* and may not adjust any score until telemetry promotes them - the supervised evidence requirements in the project capability policy - and suspend effects pending demotion review when observed failures exceed the policy threshold. And the sacred rule stays loud: nothing may ever raise B. That is the rule that will get argued away first if it is not defended explicitly.
 

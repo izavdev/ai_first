@@ -117,10 +117,15 @@ After grooming, an independent human grants approval by default. In configured s
 | Azure DevOps | Apply the tag and post the exact revision/digest APPROVED comment; its author is the approver. |
 | Linear | Apply the label and post the exact revision/digest APPROVED comment; its author is the approver. |
 
-Setup now also installs `approval.py` (Python 3, no external dependencies). Upgrade
+Setup now also installs `approval.py` (Python 3.10+, no external dependencies). Upgrade
 all consumers together and re-groom existing briefs: label-only and bare-marker
 approvals cannot carry forward. See the [approval protocol](groom.md#obtain-human-approval)
 for edits, revocation, and fresh approval.
+
+Version 0.4.1 rejects non-whitespace text after a description's metadata block.
+Upgrade the installed schema and all parsers together. Preserve any trailing edits
+for explicit repair into the brief, then re-groom and approve the new revision.
+Setup does not repair tracker content automatically.
 
 No skill grants brief approval. See [grooming](groom.md#obtain-human-approval) for the handoff.
 

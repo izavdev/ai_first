@@ -46,7 +46,9 @@ cannot find the item, it stops for reconciliation; search absence alone does not
 prove that another create is safe. Run only one decomposition session per parent
 unless the tracker supplies safe concurrent idempotency.
 
-Duplicate keys, conflicting saved plans, and legacy or older-revision children
+Conflicting snapshots of one canonical child ID cannot count as different units,
+even if their decomposition keys differ. Duplicate keys, conflicting saved plans,
+and legacy or older-revision children
 require explicit review. Record which old items should be retained separately,
 superseded, or adopted after scope/provenance reconciliation. The skill never deletes
 or reopens them automatically. A revised brief does not justify silently recreating
@@ -149,7 +151,7 @@ writes must be reconciled against the current item state.
 |---|---|
 | Missing or unauthorized self-approval | Obtain independent approval, or use setup to configure your verified solo identity and manually approve. Every tracker requires the label and exact revision/digest approval comment in both modes. |
 | Open decisions remain | Resolve them in the brief and keep its count accurate before retrying. |
-| Schema is malformed | Repair the rule named in the `[ai-first] SCHEMA:` comment. Use the active adapter's storage format, including Linear's fenced block. |
+| Schema is malformed | Repair the rule named in the `[ai-first] SCHEMA:` comment. Preserve trailing text for explicit repair before the metadata block; repaired briefs need re-grooming and fresh approval. Use the active adapter's storage format, including Linear's fenced block. |
 | No valid verification command exists | Accept a non-delegate classification or improve verification before reclassifying. |
 | Capability manifest is malformed | Classification continues on raw scores; repair the manifest through [capability review](update-ai-first-capabilities.md). |
 | Discovered metadata is ignored | Check the parent summary for malformed, conflicting, mismatched, or unapproved claims; review central approval. |

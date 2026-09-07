@@ -52,7 +52,7 @@ summary as `solo self-approval by <identity>`.
 
 ## 2. Description block (data layer, machine-parsable)
 
-A fenced block at the END of the work item description. Plain visible text, no HTML comments (ADO sanitizer is unreliable with them). Everything after the closing fence is ignored; everything before it is the human-authored description.
+A fenced block at the END of the work item description. Plain visible text, no HTML comments (ADO sanitizer is unreliable with them). Human-authored description text belongs before the opening wrapper. Only whitespace may follow the complete closing block; other trailing content is a schema violation, never text to discard.
 
 ### 2.1 On the regular parent item (written by `groom`)
 
@@ -288,7 +288,10 @@ is not proof: trackers may be eventually consistent.
 Reconciliation reads complete plan/reference/intent history, parent relationships, and a
 container inventory covering every state. Compare exact keys in fetched bodies;
 a search snippet, title match, or parent child list alone is insufficient. A single
-match is reused, including a closed child (do not reopen it). Duplicate keys, legacy
+match is reused, including a closed child (do not reopen it). Conflicting snapshots
+of one canonical item ID block reconciliation even if their unit keys differ or a
+prior-item disposition exists. Identical repeated snapshots may count once; one
+canonical child cannot satisfy multiple units. Duplicate keys, legacy
 unkeyed children, older-revision children, and unmatched planned units need explicit
 review before further creation. Preserve human edits, tier challenges, bounce history,
 and unrelated labels. Resume missing relationships or labels only when the intended
@@ -326,8 +329,11 @@ before using it. The fixtures test these documented encodings, not live vendor s
 - Normalize CRLF/CR to LF; preserve other human text and value whitespace. The
   canonical writer adds one newline between human text and the opening delimiter;
   the reader excludes that separator and the wrapper from returned human text.
-  Content after the complete closing block is ignored. Unknown keys are retained
-  for round trips but have no policy effect.
+  Only whitespace may follow the complete closing block. Reject other trailing
+  content before constructing an approval payload or updating the item. Preserve
+  that content for explicit repair into the human description; a repaired brief
+  requires re-grooming and fresh approval. Never silently drop or relocate edits.
+  Unknown keys are retained for round trips but have no policy effect.
 - `uint` is a canonical nonnegative decimal integer, not boolean/float text; `date`
   is YYYY-MM-DD; `uuid` is lowercase canonical; `digest` is sha256 plus 64 lowercase
   hex digits. Scores are V/B/C/A in that order, each 0-2; deltas are each 0-1 with
@@ -344,6 +350,12 @@ before using it. The fixtures test these documented encodings, not live vendor s
   ai-escalated label is required. Hard-override truth, approval identity, command
   coverage, profile policy and remote evidence still need semantic checks by consumers.
 - Human edits remain allowed within these rules, with edit history as the audit trail.
+
+Package 0.4.1 tightens trailing-content validation without changing field names or
+the sentinel. Upgrade installed schemas and every parsing consumer together through
+setup. Existing well-formed blocks remain readable; items with trailing content
+must be repaired before use. Older consumers that ignore the suffix do not enforce
+this boundary and must not be used to validate those items.
 
 <!-- contract-fields:start -->
 | Scope | Field | Type/value |

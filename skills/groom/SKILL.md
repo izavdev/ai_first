@@ -30,6 +30,11 @@ Always paste the source ask VERBATIM into the created item's description (above 
 2. Fetch the item via the tracker MCP. If the fetch fails, stop and report.
 3. If the item already carries `groomed`, ask whether to re-groom (which clears `brief-approved` if present, with a `[ai-first] BLOCKED:` comment explaining that re-approval is needed). Never silently overwrite an approved brief.
 
+If a schema block exists, check the entire persisted description. Non-whitespace
+content after its closing block needs explicit repair. Preserve those edits in the
+reviewed brief before re-grooming; never omit them from the digest or silently erase
+them when rewriting the block. A repaired brief needs fresh approval.
+
 ## Interrogation
 
 Work through these five areas IN ORDER. Ask focused questions one area at a time; do not dump a questionnaire. Pull answers from the item, linked items, and the docs MCPs before asking the human - come prepared, ask only what you cannot find.

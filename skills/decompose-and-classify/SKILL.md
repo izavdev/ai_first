@@ -41,7 +41,7 @@ approval needed for subsequent execution.
 ## Normal decomposition guards
 
 1. Fetch the parent via the tracker MCP. Missing `groomed` or `brief-approved` label: post `[ai-first] BLOCKED:` comment with the exact missing step and STOP.
-2. Parse the parent description block (schema 2.1). Malformed: `[ai-first] SCHEMA:` comment and STOP.
+2. Parse the parent description block (schema 2.1). Non-whitespace text after the closing block is malformed; preserve it for explicit repair and re-approval, never discard it when building the approval payload. Malformed: `[ai-first] SCHEMA:` comment and STOP.
 3. Require `approval-protocol: brief-approval/v1`, requester, revision, and digest. Run the active adapter's revision-bound approval check: fetch the current persisted snapshot and linked brief, recompute its digest with `.ai-first/approval.py`, and read complete attributable comment history. Verify the request owner as a human rather than comparing against the tracker creator. Require a current label and the latest valid APPROVED record for this revision/digest by an independent human or the configured solo identity, with no later revocation. Missing helper, legacy records, changed content, or unverifiable ownership/history blocks with `[ai-first] BLOCKED:` and remediation. Read solo policy only from the project schema; never change it during classification. Record accepted solo self-approval in the parent summary.
 4. `open-decisions` > 0: STOP. Undecided judgment calls poison every downstream classification. Name the open decisions in the comment.
 
@@ -57,7 +57,9 @@ the plan. Missing guide, unresolved access/archive configuration, or an unavaila
 snapshot blocks branch-backed creation. Apply the schema's Resumable decomposition protocol.
 If a saved plan exists for this approved revision/digest, resume it with its original
 unit IDs; do not decompose the brief again. Inventory must include closed and unlinked
-items. Legacy or older-revision work, duplicate keys, conflicting plans, or incomplete
+items. Conflicting snapshots of one canonical item ID block even when unit keys
+differ; one child cannot satisfy multiple units. Legacy or older-revision work,
+duplicate keys, conflicting plans, or incomplete
 inventory blocks new creation until explicitly reconciled. Do not auto-delete,
 reopen, or duplicate existing work.
 

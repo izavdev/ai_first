@@ -12,7 +12,7 @@ ASSETS = ROOT / 'skills/setup-ai-first/assets'
 class ClassificationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        with (ASSETS / 'classification-cases.csv').open() as stream:
+        with (ASSETS / 'classification-cases.csv').open(encoding='utf-8', newline='') as stream:
             cls.cases = [(tuple(int(row[k]) for k in ('V', 'B', 'C', 'A')), row['tier'])
                          for row in csv.DictReader(stream)]
 
@@ -78,7 +78,7 @@ class ClassificationTests(unittest.TestCase):
                     classify(2, 2, 2, 2, **{key: invalid})
 
     def test_installed_schema_contains_the_same_table(self):
-        schema = (ASSETS / 'ai-first-schema.md').read_text()
+        schema = (ASSETS / 'ai-first-schema.md').read_text(encoding='utf-8')
         labels = {'human-only': 'H', 'pair': 'P', 'delegate': 'D'}
         for v, b in itertools.product(range(3), repeat=2):
             row = [labels[tier] for scores, tier in self.cases if scores[:2] == (v, b)]

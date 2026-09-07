@@ -59,6 +59,27 @@ class DecompositionTests(unittest.TestCase):
             self.resume([self.item(), self.item(id='github:org/repo#999')])
         self.assertEqual(self.resume([self.item(), self.item()])[0]['action'], 'reuse')
 
+    def test_one_canonical_child_cannot_satisfy_multiple_units(self):
+        first = self.item(0)
+        second = self.item(1, id=first['id'])
+        for items in ([first, second], [second, first]):
+            with self.subTest(items=items), self.assertRaisesRegex(ValueError, 'canonical'):
+                self.resume(items)
+
+    def test_prior_disposition_cannot_hide_conflicting_current_snapshot(self):
+        current = self.item()
+        prior = self.item(revision='older', key='old-key')
+        for items in ([prior, current], [current, prior]):
+            with self.subTest(items=items), self.assertRaisesRegex(ValueError, 'canonical'):
+                self.resume(items, resolved_prior={prior['id']: 'comment:human-disposition'})
+
+    def test_out_of_scope_snapshot_cannot_hide_conflicting_current_identity(self):
+        current = self.item()
+        stale = self.item(parent='github:org/repo#99', key='old-key')
+        for items in ([stale, current], [current, stale]):
+            with self.subTest(items=items), self.assertRaisesRegex(ValueError, 'canonical'):
+                self.resume(items)
+
     def test_incomplete_inventory_and_conflicting_intents_block(self):
         with self.assertRaises(ValueError):
             reconcile(self.plan, [], {}, inventory_complete=False)
