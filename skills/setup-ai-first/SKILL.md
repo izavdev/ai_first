@@ -36,7 +36,7 @@ The workflow has three semantic sizes but does not prescribe their names:
 
 | Size role | Meaning | Common names |
 |---|---|---|
-| Large | Contains multiple independently groomed regular items; split before grooming | Epic, Initiative, Feature |
+| Large | Contains multiple independently groomed regular items; use groom’s large-item planning mode to split | Epic, Initiative, Feature |
 | Regular | The main unit that `groom` turns into a brief and later decomposes | Issue, Story, User Story, PBI |
 | Small | One executable, classifiable outcome created by decomposition | Sub-issue, Sub-task, Task |
 

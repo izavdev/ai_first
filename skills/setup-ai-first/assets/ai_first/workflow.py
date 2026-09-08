@@ -18,7 +18,7 @@ def intake(needs_investigation, one_outcome, one_surface, machine_checkable, no_
         return dict(route='small', create_role='small', next_skill='decompose-and-classify',
                     next_mode='single-item', stop_after='create-unclassified-item')
     if large:
-        return dict(route='large', create_role=None, next_skill=None, stop_after='recommend-regular-split')
+        return dict(route='large', create_role=None, next_skill=None, next_mode='large-item-planning', stop_after='plan-regular-items')
     return dict(route='regular', create_role='regular', next_skill=None, stop_after='groom-for-approval')
 
 

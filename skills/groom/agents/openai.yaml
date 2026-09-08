@@ -1,6 +1,6 @@
 interface:
-  display_name: "Groom an AI-first brief"
-  short_description: "Create an approval-ready delivery brief"
-  default_prompt: "Use $groom to turn this request into an approval-ready brief."
+  display_name: "Plan and groom AI-first work"
+  short_description: "Plan large items or prepare approval-ready briefs"
+  default_prompt: "Use $groom to plan this large item into regular items or prepare an approval-ready brief."
 policy:
   allow_implicit_invocation: false

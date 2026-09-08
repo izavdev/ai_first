@@ -1,13 +1,13 @@
 ---
 name: groom
-description: Turn a raw ask or tracker item into an approval-ready AI-first brief through structured interrogation. Run after setup-ai-first.
+description: Plan large tracker items into regular items, or turn a raw ask or regular item into an approval-ready AI-first brief. Run after setup-ai-first.
 ---
 
 # Groom
 
 User-invoked only. Run this workflow when a human explicitly invokes it, not from model inference. The guard clauses guide this invoked session. Direct tracker edits and merges outside the workflow are not automatically blocked; tracker enforcement and required CI checks are optional, separately deployed integrations.
 
-Turns a raw item into a groomed brief that a human can approve. This skill PLANS and CLARIFIES. It never decomposes a brief or writes code. Intake may create one unclassified small item under the explicit small-item exception below; classification is a separate human-invoked handoff. Its output is a brief plus labels; its exit hands off to a human approver, then to `decompose-and-classify`.
+Turns a regular item into a groomed brief that a human can approve, or plans a large item into regular child items. This skill PLANS and CLARIFIES. Execution decomposition and code belong downstream. Intake may create one unclassified small item under the explicit small-item exception below; classification is a separate human-invoked handoff. Regular grooming outputs a brief plus labels and hands off to a human approver, then to `decompose-and-classify`. Large-item planning outputs a split plan and, when requested, unclassified regular children for subsequent grooming.
 
 Require `.ai-first/approval.py`; if absent, rerun setup to install the revision-bound approval protocol. Before doing anything else, read `.ai-first/README.md`, `.ai-first/terminology.md`, `.ai-first/ai-first-schema.md`, and `.ai-first/tracker.md` from the current project. If any is missing, stop and tell the user to install and run `setup-ai-first`. Use the configured large, regular, and small terms in all user-facing text and tracker item types. The tracker file explains which tools to call, how labels are read and written, and how approval identity is checked.
 
@@ -25,14 +25,20 @@ Input is either an item (ID or URL) OR a raw ask: a pasted email, DM, or thread 
 
 1. **Investigation** - it is not yet known whether any work on our side is needed (customer issues, "please check if..."). Do NOT create an item. Run a bounded research pass: query docs MCPs, linked systems, and the repo; answer the question or produce findings. If work turns out to be needed, re-triage the remaining ask with what was learned.
 2. **Small** - one outcome, one touched surface, machine-checkable definition of done, zero judgment calls. Create an item using the configured small term and stop with a handoff to `decompose-and-classify` in single-item mode. Do not classify it, apply a tier, or start the next skill automatically. All four conditions must hold; if any is uncertain, fall through.
-3. **Large** - more than one destination, or the touched surfaces cannot be named yet, or the route is foggy enough that a multi-session planning effort is warranted. Recommend splitting it into regular items first; groom each regular item separately. Do not groom a large item as if it were regular.
+3. **Large** - more than one destination, or the touched surfaces cannot be named yet, or the route is foggy enough that a multi-session planning effort is warranted. Enter large-item planning mode below. For a raw ask, create the configured large item only when tracker creation is requested; otherwise present the plan in conversation. Groom each resulting regular item separately.
 4. **Regular** - everything else. Create an item using the configured regular term and proceed to grooming below.
 
 Tie-break rule: when torn between small and regular, choose regular. Grooming a small thing costs minutes; skipping grooming on a mis-sized thing costs a sprint. The asymmetry is deliberate.
 
+For existing items, fetch the item and linked context read-only and select the mode from configured tracker type and actual scope before regular grooming preconditions. A large item or an explicit large-to-regular planning request enters large-item planning; do not require a groomed or approved parent for this planning step. Do not silently change an existing item's type when scope and type disagree; explain the sizing recommendation.
+
 Always paste the source ask VERBATIM into the created item's description (above the block) and link the thread if one exists. "It is in someone's inbox" is a context-locality score of zero; intake is where that gets fixed.
 
-## Preconditions
+## Large-item planning
+
+Read [large-item planning](references/large-item-planning.md) for this mode. Plan coherent regular outcomes, create linked unclassified children when requested, and hand off to regular grooming. The regular brief output and approval labels below do not apply to the large parent or ungroomed children.
+
+## Regular grooming preconditions
 
 1. Grooming always operates on an item. Raw asks must pass through intake first, which creates the item and embeds the source thread; never groom a pasted summary without an item to write into.
 2. Fetch the item via the tracker MCP. If the fetch fails, stop and report.
@@ -66,4 +72,4 @@ Track unresolved judgment calls as **open decisions**. Do not resolve them yours
 
 - The requester cannot articulate a destination: stop, record what is known, do not fake a brief.
 - The item is a bug with an obvious one-line fix: say grooming is overkill, suggest classifying it directly as one small item via `decompose-and-classify` in single-item mode.
-- Open decisions exceed five: the item belongs at the configured large size. Recommend splitting it into regular items before grooming continues.
+- Open decisions exceed five: the item belongs at the configured large size. Record the decisions and continue in large-item planning mode to propose regular items. Do not manufacture answers or mark the item groomed; unresolved decisions that prevent choosing child boundaries must remain visible.

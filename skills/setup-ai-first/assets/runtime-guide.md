@@ -157,3 +157,10 @@ source and installed hashes separately. Unknown source commit/dirty state remain
 null. An old v1 receipt requires an explicit setup reconciliation; do not just
 change its version field. A receipt and its hashes record reviewed provenance,
 not authenticity against a malicious editor with access to the same files.
+
+Large intake returns `next_mode: large-item-planning` and `stop_after: plan-regular-items`.
+`create_role: null` means intake does not itself authorize creation; `groom` plans
+regular children and creates the large parent/regular children only within the
+user's requested tracker scope. These children remain unclassified until groomed
+and approved individually. Existing large tracker items enter this planning mode
+directly after read-only sizing, without passing regular brief approval guards.

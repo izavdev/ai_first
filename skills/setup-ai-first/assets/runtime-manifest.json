@@ -14,7 +14,7 @@
     "ai_first/inventory.py": "sha256:a629d0fa8c152cafa0def9eaf5d87c3f3302e4aca7ceb0251b9f060c74eafcd3",
     "ai_first/schema.py": "sha256:2583b0ef43fffe12768ff8e9d51d12806ddc4106b6727c36a8bb422f7c220c7e",
     "ai_first/version.py": "sha256:0acf18bfc7abc31d3e2d8bc5099d177a345b3fbfb6f6d3228facd67b77d3535c",
-    "ai_first/workflow.py": "sha256:0897eec9ef2fe95f4e7cc6949d2a9c6a9a11681059c62304ba5dd6c323bff4d7",
+    "ai_first/workflow.py": "sha256:0825ef70d017d3d3889c7a5d3218beb504a4ac89ef4be831afa78855d2d6247f",
     "approval.py": "sha256:bd142e86db5e1f63afb1d42ddb570c6e88853dc93a4bf97d084d6acddf0fe8e5",
     "policy.py": "sha256:694ce1a026093e79175b63dd92ef39bbf896379866f65a90f9d6979aa2b5538e",
     "workflow-contract.json": "sha256:655213d0518500c83e7fa1e9806935d0687228cfa81590cc5869398f61f5e63e"
