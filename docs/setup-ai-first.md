@@ -6,8 +6,14 @@ Run this skill once in each target repository, before grooming or classification
 
 - Install `setup-ai-first` and the workflow skills you intend to use.
 - Open the target repository in your agent client.
+- Have Python 3.10+ available. The Windows `py -3` launcher is supported; you do not need a `python` or `python3` alias.
 - Know the tracker and the team's names for large, regular, and small work items.
 - Have tracker tools available if you want label bootstrap completed in the same session. Local setup can finish without them.
+
+Setup and the workflow skills select a working interpreter once per environment
+and reuse it. They check the actual version and try `py -3` as well as `python`
+and `python3` before reporting Python unavailable. See
+[Python command selection](../skills/setup-ai-first/assets/runtime-guide.md#python-command-selection).
 
 ## Run setup
 

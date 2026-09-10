@@ -15,9 +15,12 @@ they are missing, stop and tell the user to run `setup-ai-first` first. Read the
 whole manifest; do not infer defaults from examples.
 
 
-Run `python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1` before
-workflow writes (`python` on Windows). Missing command, nonzero exit, or incompatible
-files require setup reconciliation. Review any `unrecorded_changes` against current
+Select and reuse a working Python 3.10+ command per the Python command selection
+section of `.ai-first/runtime-guide.md` before invoking helpers. Try `py -3` as
+well as `python`/`python3`; a missing command name does not mean Python is absent.
+Run `.ai-first/policy.py doctor --require-policy ai-first-policy/v1` with that
+selected command before workflow writes. A missing helper/doctor command, nonzero
+helper exit, or incompatible files requires setup reconciliation. Review any `unrecorded_changes` against current
 project policy; never reset them automatically. Read the relevant command section
 of `.ai-first/runtime-guide.md` when preparing helper inputs. Inputs are JSON data
 files; remote facts and human judgments still come from inspected evidence.

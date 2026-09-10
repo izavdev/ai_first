@@ -60,7 +60,8 @@ class InstalledRuntimeTests(unittest.TestCase):
     def test_copy_is_self_contained_and_runtime_is_the_tested_source(self):
         from src.ai_first import classification
         self.assertEqual(Path(classification.__file__).resolve(), ASSETS / 'ai_first/classification.py')
-        self.assertEqual(self.cli('version')['package_version'], '0.5.0')
+        package_version = json.loads((ROOT / '.codex-plugin/plugin.json').read_text())['version']
+        self.assertEqual(self.cli('version')['package_version'], package_version)
         self.assertEqual(self.cli('classify', dict(v=2, b=2, c=2, a=1,
                          hard_override=False, verification_valid=True))['tier'], 'delegate')
         self.receipt()

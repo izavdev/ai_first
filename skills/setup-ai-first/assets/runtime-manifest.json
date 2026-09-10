@@ -1,7 +1,7 @@
 {
   "schema": "ai-first-runtime/v1",
   "policy_revision": "ai-first-policy/v1",
-  "package_version": "0.5.0",
+  "package_version": "0.6.0",
   "files": {
     "adapter-contract.json": "sha256:50d207e670186fbc9428ba394c8c1b3ffa3c33e0d1dc9bb87e7e8be0b5ab8393",
     "ai_first/__init__.py": "sha256:b8ff0a39a18172fa1ad1a8f9b3edded893a2b67ee04de153f6fd527eee57e9f1",
@@ -13,7 +13,7 @@
     "ai_first/installation.py": "sha256:ce233b9aa20a646b7e61d7dbd2d99389fac83f99e565d1e5509771281225e873",
     "ai_first/inventory.py": "sha256:a629d0fa8c152cafa0def9eaf5d87c3f3302e4aca7ceb0251b9f060c74eafcd3",
     "ai_first/schema.py": "sha256:2583b0ef43fffe12768ff8e9d51d12806ddc4106b6727c36a8bb422f7c220c7e",
-    "ai_first/version.py": "sha256:0acf18bfc7abc31d3e2d8bc5099d177a345b3fbfb6f6d3228facd67b77d3535c",
+    "ai_first/version.py": "sha256:f671ce9a910acda60d16642c6f034692f82155656a3d448c49a9c81643f28aa1",
     "ai_first/workflow.py": "sha256:0825ef70d017d3d3889c7a5d3218beb504a4ac89ef4be831afa78855d2d6247f",
     "approval.py": "sha256:bd142e86db5e1f63afb1d42ddb570c6e88853dc93a4bf97d084d6acddf0fe8e5",
     "policy.py": "sha256:694ce1a026093e79175b63dd92ef39bbf896379866f65a90f9d6979aa2b5538e",

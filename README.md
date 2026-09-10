@@ -129,6 +129,10 @@ workflow writes, skills run:
 python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1
 ```
 
+The skills select a working Python 3.10+ interpreter once per environment and reuse
+it. Windows installations available through `py -3` are supported; substitute that
+prefix in the example above. See [Python command selection](skills/setup-ai-first/assets/runtime-guide.md#python-command-selection).
+
 The helper parses complete persisted briefs, derives tiers, evaluates approval
 records using local solo policy, and reconciles retry inventory. It never calls
 trackers or executes item commands. See the [runtime command guide](skills/setup-ai-first/assets/runtime-guide.md).
