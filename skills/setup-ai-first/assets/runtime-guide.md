@@ -7,6 +7,45 @@ commands use the same implementation. No tracker or shell command is executed by
 the policy helper. Tracker identities, evidence, and completeness are established
 through authenticated tools and human review, never inferred from item text.
 
+## Python command selection
+
+Resolve Python once per shell/environment and reuse the successful command prefix
+for all `policy.py`, `approval.py`, and other Python helper calls. Honor an explicit
+project interpreter or active virtual environment first. Otherwise try `python`,
+`py -3`, then `python3` on Windows; try `python3`, `python`, then `py -3` elsewhere.
+Stop probing after the first working Python 3.10+ interpreter. For each candidate,
+execute this fixed probe (shown here with the Windows launcher):
+
+```powershell
+py -3 -c "import sys; print(sys.executable); print(sys.version); sys.exit(0 if sys.version_info >= (3, 10) else 1)"
+```
+
+Require actual Python output and exit 0. A missing command, a launcher without a
+usable runtime, an app-store alias, or an older interpreter is not success; try the
+next candidate. If an explicitly required project interpreter cannot run, report
+that project prerequisite instead of silently replacing it. Only report no usable
+Python after exhausting the applicable candidates, including `py -3`; list the
+attempts and observed failures. Do not install Python or change PATH as part of
+selection.
+
+Keep the selected executable and launcher arguments separate: `py -3` is the
+prefix `['py', '-3']`, not an executable named `py -3`. For paths containing spaces,
+quote the executable appropriately (PowerShell uses `& "C:\path with spaces\python.exe"`).
+Use `sys.executable` when an already-running Python process launches another Python
+helper. Examples below use `python3`; replace that prefix with the selected command,
+for example:
+
+```powershell
+py -3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1
+py -3 .ai-first/approval.py payload.json
+```
+
+Remember the working prefix in session context; do not probe before every command
+or overwrite shared project policy with a machine-specific path. Re-select only
+when the environment changes or the interpreter itself stops launching. A helper's
+nonzero policy result is not interpreter discovery failure and must not trigger a
+retry under a different Python. A new session may validate its candidate once.
+
 ## Before workflow writes
 
 Run from the consuming repository:
@@ -15,7 +54,7 @@ Run from the consuming repository:
 python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1
 ```
 
-On Windows use `python` instead of `python3`. Exit 0 means local runtime bytes and
+Use the selected Python prefix above on every platform. Exit 0 means local runtime bytes and
 policy revisions match the reviewed receipt. Exit 1 means incompatible; rerun setup
 and reconcile the reported components. Exit 2 indicates malformed input or an I/O
 error. A helper missing the `doctor` command is an old consumer, not a passing check.
@@ -157,3 +196,10 @@ source and installed hashes separately. Unknown source commit/dirty state remain
 null. An old v1 receipt requires an explicit setup reconciliation; do not just
 change its version field. A receipt and its hashes record reviewed provenance,
 not authenticity against a malicious editor with access to the same files.
+
+Large intake returns `next_mode: large-item-planning` and `stop_after: plan-regular-items`.
+`create_role: null` means intake does not itself authorize creation; `groom` plans
+regular children and creates the large parent/regular children only within the
+user's requested tracker scope. These children remain unclassified until groomed
+and approved individually. Existing large tracker items enter this planning mode
+directly after read-only sizing, without passing regular brief approval guards.

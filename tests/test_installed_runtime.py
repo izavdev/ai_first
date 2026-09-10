@@ -60,7 +60,8 @@ class InstalledRuntimeTests(unittest.TestCase):
     def test_copy_is_self_contained_and_runtime_is_the_tested_source(self):
         from src.ai_first import classification
         self.assertEqual(Path(classification.__file__).resolve(), ASSETS / 'ai_first/classification.py')
-        self.assertEqual(self.cli('version')['package_version'], '0.5.0')
+        package_version = json.loads((ROOT / '.codex-plugin/plugin.json').read_text())['version']
+        self.assertEqual(self.cli('version')['package_version'], package_version)
         self.assertEqual(self.cli('classify', dict(v=2, b=2, c=2, a=1,
                          hard_override=False, verification_valid=True))['tier'], 'delegate')
         self.receipt()
@@ -120,6 +121,19 @@ class InstalledRuntimeTests(unittest.TestCase):
         result = self.cli('intake', dict(needs_investigation=True, one_outcome=True,
                           one_surface=True, machine_checkable=True, no_decisions=True, large=False))
         self.assertIsNone(result['create_role'])
+
+    def test_large_intake_enters_planning_without_authorizing_creation_or_classification(self):
+        result = self.cli('intake', dict(needs_investigation=False, one_outcome=False,
+                          one_surface=False, machine_checkable=False, no_decisions=False, large=True))
+        self.assertEqual(result['route'], 'large')
+        self.assertEqual(result['next_mode'], 'large-item-planning')
+        self.assertEqual(result['stop_after'], 'plan-regular-items')
+        self.assertIsNone(result['create_role'])
+        self.assertIsNone(result['next_skill'])
+        self.assertNotIn('tier', result)
+        # A planning child has no brief/task block: it cannot enter execution
+        # decomposition merely because its Epic has been split.
+        self.cli('mode', dict(requested='decompose', kind=None), expected=2)
 
     def test_approval_uses_full_snapshot_and_local_policy(self):
         snapshot, bound, check = self.approved()

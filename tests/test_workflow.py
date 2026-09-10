@@ -1,7 +1,23 @@
 import itertools
 import unittest
 
-from src.ai_first.workflow import reclassify, select_mode
+from src.ai_first.workflow import intake, reclassify, select_mode
+
+
+class IntakeTests(unittest.TestCase):
+    def test_routing_precedence_across_all_reviewed_fact_combinations(self):
+        for flags in itertools.product((False, True), repeat=6):
+            investigation, outcome, surface, checkable, decisions, large = flags
+            expected = ('investigation' if investigation else
+                        'small' if all((outcome, surface, checkable, decisions)) else
+                        'large' if large else 'regular')
+            with self.subTest(flags=flags):
+                result = intake(*flags)
+                self.assertEqual(result['route'], expected)
+                if expected == 'large':
+                    self.assertEqual(result['next_mode'], 'large-item-planning')
+                    self.assertIsNone(result['create_role'])
+                    self.assertIsNone(result['next_skill'])
 
 
 class ModeTests(unittest.TestCase):

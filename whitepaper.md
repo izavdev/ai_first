@@ -185,7 +185,7 @@ Real work rarely arrives as a well-sized work item. It arrives as an email, a DM
 |---|---|---|
 | **Investigation** | It is not yet known whether any work on our side is needed (customer issues, "please check if...") | No work item yet. Bounded research pass; answer or produce findings, then re-triage what remains |
 | **Small** | One outcome, one touched surface, machine-checkable done, zero judgment calls - all four must hold | Create the configured small item and classify it in single-item mode |
-| **Large** | More than one destination, or touched surfaces cannot be named, or the route is foggy | Split into regular items first; groom each one separately |
+| **Large** | More than one destination, or touched surfaces cannot be named, or the route is foggy | Use groom’s large-item planning mode to propose regular children and create them when requested; groom each one separately |
 | **Regular** | Everything else | Create the configured regular item and groom it |
 
 Two rules carry the poka-yoke weight. The **tie-break rule**: when torn between small and regular, choose regular - grooming a small thing costs minutes, while skipping grooming on a mis-sized thing costs a sprint, so the default is asymmetric on purpose. And the **verbatim rule**: the source email or thread is always pasted into the created item and linked, because "it is in someone's inbox" is a context-locality score of zero, and intake is the moment that gets fixed - not three weeks later when the thread is buried.

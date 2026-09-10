@@ -1,6 +1,6 @@
 # How to groom a request
 
-Use `groom` to turn a raw ask or tracker item into an approval-ready brief. Its output is planning material and tracker labels; code implementation and decomposition happen later.
+Use `groom` to turn a raw ask or tracker item into an approval-ready brief. It also plans large items into regular children (for example Epic → Issues). Execution task decomposition and code implementation happen after each regular brief is approved.
 
 ## Before you start
 
@@ -30,10 +30,40 @@ Raw requests are triaged before grooming:
 |---|---|
 | Investigation | A bounded research pass answers whether work is needed; no item is created initially. Any remaining work is triaged again. |
 | Small | An item is created and handed off for explicit classification in single-item mode. It must have one outcome, one touched surface, machine-checkable completion, and zero judgment calls. |
-| Large | Split into regular items first and groom each separately. |
+| Large | Enter large-item planning: propose regular children, create and link them when requested, then groom each separately. |
 | Regular | An item is created and grooming proceeds. |
 
 Created items retain the source ask verbatim and link the original thread when available. An existing `groomed` item requires a re-grooming decision; re-grooming clears existing approval and requires fresh approval.
+
+## Plan an Epic into Issues
+
+When setup maps large to Epic and regular to Issue:
+
+```text
+$groom EPIC-123
+Decompose this Epic into Issues and create them with parent and dependency links.
+```
+
+For a preview without tracker changes:
+
+```text
+$groom EPIC-123
+Propose an Issue breakdown for review; do not create items yet.
+```
+
+The skill reads the Epic, specs, and existing children, then proposes coherent
+outcomes with scope, initial acceptance criteria, dependencies, context, and open
+decisions. Existing large items enter this mode directly; they do not need a
+groomed brief or approval first. Raw large asks can also produce a proposal.
+
+When creation is requested, the skill saves the plan, creates unclassified Issues,
+and verifies their links. Repeated runs reuse recorded children; uncertain creation
+results are investigated before further creation. The Epic and new Issues do not
+receive grooming, approval, or delegation labels from this planning step.
+
+Next, run `$groom ISSUE-123` for each Issue, obtain its own human brief approval,
+then explicitly invoke `decompose-and-classify` to create execution tasks. Epic
+approval never substitutes for individual Issue approval.
 
 ## Work through the brief
 
@@ -45,7 +75,7 @@ The skill checks the item and linked documentation before asking focused questio
 4. **Definition of done:** provide concrete criteria and identify which are machine-checkable.
 5. **Out of scope and human-only work:** state exclusions and any work a human must execute.
 
-Unresolved judgment calls are recorded as open decisions with the person who should decide. Resolve them before decomposition. If more than five remain, split the work into regular items. If the destination cannot be stated, grooming stops and records what is known.
+Unresolved judgment calls are recorded as open decisions with the person who should decide. Resolve them before decomposition. If more than five remain, continue in large-item planning to propose a split; decisions that prevent choosing child boundaries need human input. If the destination cannot be stated, grooming stops and records what is known.
 
 ## Check the result
 

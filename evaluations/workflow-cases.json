@@ -153,7 +153,7 @@
   ],
   "response_contract": {
     "classification": "id, scores: four integers in V/B/C/A order, tier: delegate|pair|human-only, verification_valid: boolean, hard_override: boolean, rationale: text",
-    "small-intake": "id, route: investigation|small|regular|large, create_role: small|regular|null, stop_after: research-and-retriage|create-unclassified-item|recommend-regular-split|groom-for-approval, next_mode: single-item|null, rationale: text",
+    "small-intake": "id, route: investigation|small|regular|large, create_role: small|regular|null, stop_after: research-and-retriage|create-unclassified-item|plan-regular-items|groom-for-approval, next_mode: single-item|large-item-planning|null, rationale: text",
     "uncertain-create": "id, create_authorized: boolean, action: block|create|reuse, rationale: text"
   }
 }

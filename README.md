@@ -26,7 +26,7 @@ npx skills@latest add izavdev/ai_first
 
 Select all four skills, then choose any of the supported clients offered by the installer, including GitHub Copilot, Claude Code, and Codex. The installer copies ordinary, editable skill files into the location expected by each selected client.
 
-Run `setup-ai-first` once in each target repository. It asks which tracker the project uses and what the team calls large, regular, and small work items, and whether briefs need independent approval or named solo self-approval. It then installs the shared schema, capability manifest and guide, terminology, and active adapter under `.ai-first/`. The capability manifest is project-owned and must be filled by the user or team; no score-changing capability is enabled by default. Use `update-ai-first-capabilities` to review tools, MCPs, resources, context retrieval, validators, skills, and agents before approving them. Setup also offers [dedicated planning branches](docs/plan-storage.md) for plan/context files, with tracker comments as the default. Use `groom` and `decompose-and-classify` afterward. Invoke them using the selected client's skill syntax: for example, `$setup-ai-first` in Codex or `/setup-ai-first` in Claude Code.
+Run `setup-ai-first` once in each target repository. It asks which tracker the project uses and what the team calls large, regular, and small work items, and whether briefs need independent approval or named solo self-approval. It then installs the shared schema, capability manifest and guide, terminology, and active adapter under `.ai-first/`. The capability manifest is project-owned and must be filled by the user or team; no score-changing capability is enabled by default. Use `update-ai-first-capabilities` to review tools, MCPs, resources, context retrieval, validators, skills, and agents before approving them. Setup also offers [dedicated planning branches](docs/plan-storage.md) for plan/context files, with tracker comments as the default. Use `groom` and `decompose-and-classify` afterward. `groom` can also plan large items into regular children (for example Epic → Issues); each child then follows its own grooming and approval flow. Invoke them using the selected client's skill syntax: for example, `$setup-ai-first` in Codex or `/setup-ai-first` in Claude Code.
 
 Do not install the same skills both through `npx skills` and a native plugin in one client; duplicate commands and discovery entries are the likely result.
 
@@ -128,6 +128,10 @@ workflow writes, skills run:
 ```bash
 python3 .ai-first/policy.py doctor --require-policy ai-first-policy/v1
 ```
+
+The skills select a working Python 3.10+ interpreter once per environment and reuse
+it. Windows installations available through `py -3` are supported; substitute that
+prefix in the example above. See [Python command selection](skills/setup-ai-first/assets/runtime-guide.md#python-command-selection).
 
 The helper parses complete persisted briefs, derives tiers, evaluates approval
 records using local solo policy, and reconciles retry inventory. It never calls

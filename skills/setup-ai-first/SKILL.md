@@ -20,6 +20,12 @@ Check for:
 
 Do not infer a tracker solely from an installed tool when both are plausible.
 
+Before invoking any Python helper, read the Python command selection section of
+[assets/runtime-guide.md](assets/runtime-guide.md). Select a working Python 3.10+
+command, including `py -3` when that is the available launcher, and reuse it for
+all setup and subsequent helper calls in this environment. Do not report Python
+missing merely because `python` or `python3` is unavailable.
+
 ## 2. Choose the tracker
 
 Ask which tracker this project uses when inspection did not settle it. Supported choices are:
@@ -36,7 +42,7 @@ The workflow has three semantic sizes but does not prescribe their names:
 
 | Size role | Meaning | Common names |
 |---|---|---|
-| Large | Contains multiple independently groomed regular items; split before grooming | Epic, Initiative, Feature |
+| Large | Contains multiple independently groomed regular items; use groom’s large-item planning mode to split | Epic, Initiative, Feature |
 | Regular | The main unit that `groom` turns into a brief and later decomposes | Issue, Story, User Story, PBI |
 | Small | One executable, classifiable outcome created by decomposition | Sub-issue, Sub-task, Task |
 
