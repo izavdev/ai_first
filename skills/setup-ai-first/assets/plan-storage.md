@@ -12,6 +12,11 @@ An unknown/conflicting value needs repair; do not silently change an existing ch
 
 Tracker-comment is the default. Store the complete plan JSON in the parent's PLAN
 comment as defined by the schema. Normal context links remain in task descriptions.
+During setup, recommend `git-branch` when decompositions are expected to exceed five
+units, repeat substantial shared context, or approach the tracker's/tool's response
+budget. This is a configuration choice, not an automatic runtime fallback. For an
+existing tracker-comment project, first compact child bodies and run `payload-check`;
+changing backend still requires an explicit reviewed migration.
 
 For git-branch, also record the confirmed values:
 

@@ -75,6 +75,13 @@ class InstalledRuntimeTests(unittest.TestCase):
         source.write_text('{"v":NaN,"b":2,"c":2,"a":2}', encoding='utf-8')
         self.cli('classify', None, str(source), expected=2)
 
+    def test_payload_preflight_is_available_in_installed_copy(self):
+        result = self.cli('payload-check', dict(payload='units: PLACEHOLDER'), expected=1)
+        self.assertFalse(result['ready'])
+        result = self.cli('payload-check', dict(payload='ready', max_bytes=16))
+        self.assertTrue(result['ready'])
+        self.assertEqual(result['utf8_bytes'], 5)
+
     def test_doctor_rejects_missing_mixed_and_modified_runtime(self):
         self.cli('doctor', expected=1)
         self.receipt()

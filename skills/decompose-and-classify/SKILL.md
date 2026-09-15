@@ -29,6 +29,10 @@ helper exit, or incompatible files requires setup reconciliation. Review any `un
 project policy; never reset them automatically. Read the relevant command section
 of `.ai-first/runtime-guide.md` when preparing helper inputs. Inputs are JSON data
 files; remote facts and human judgments still come from inspected evidence.
+Treat `.ai-first/policy.py`, `.ai-first/approval.py`, and `.ai-first/ai_first/` as an
+installed runtime, not a task-local patch surface. If an adapter capture behaves
+unexpectedly, preserve the capture and reproduce it with the installed helper first;
+do not edit installed Python to make the observation pass.
 
 ## Select the mode before mode-specific guards
 
@@ -90,10 +94,24 @@ git-branch publishes the plan/context and pins its commit/path in a PLAN-REF com
 Read it back and check for competing sessions. Never follow a moving branch HEAD.
 Progress belongs in comments, never in the approved parent description.
 
+Build the canonical plan once as serialized JSON data and use that artifact as the
+source for validation, persistence, and child creation. Never manually reconstruct
+the units array or a child body in a later tool call. Before an inline PLAN comment
+or any assembled child/comment write, run `policy.py payload-check` on the exact
+outbound string with every temporary marker in `forbidden` and the tool's documented
+byte limit in `max_bytes`. When no limit is published, use 32768 as a conservative
+inline-comment budget. A failed check blocks the remote call. Compact repeated text;
+if a still-unpublished plan is too large for tracker-comment and project policy can
+be explicitly migrated, recommend `git-branch` rather than silently changing storage.
+
 ## Decomposition
 
 - Each execution item must be usable in a cold agent session by someone (or something) with no conversation history. The test: could a new team member pick this up from the item alone? If not, it is missing context links, not more prose.
 - Query the docs MCPs during decomposition. Link the actual ADRs, specs, and contracts each item depends on into its `context:` field; do not restate their content.
+- Keep child prose specific to that unit. Link the approved parent brief for shared
+  process, scope, and human-only context; repeat only the clauses needed to execute
+  or enforce this child safely. Completeness means resolvable context plus a complete
+  task block, not copying the same boilerplate into every body.
 - Prefer the largest coherent unit with one independently verifiable outcome and bounded consequences. Split when outcomes, risks, or prerequisites differ; do not create tiny items merely to increase the delegate count.
 - Order execution items by dependency; link blocking relationships as described in `.ai-first/tracker.md`.
 - Carry the parent's human-only list down: any item touching a listed area inherits the hard override.

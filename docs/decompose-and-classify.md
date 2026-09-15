@@ -20,6 +20,12 @@ Decompose the approved brief into small execution items with dependency links.
 3. It scores each item's raw properties using the project schema, then reads the capability manifest and applicable approved metadata.
 4. It saves the complete classified plan in the configured backend (tracker comment by default, or a pinned Git planning branch), assigns stable unit keys, then creates only missing units. It reuses existing matches, repairs unambiguous missing links/labels, and reports actual progress on the parent.
 
+The plan is serialized once and reused as the source of every write; unit arrays and
+child bodies are not retyped between tool calls. Before a large assembled comment or
+child write, the workflow runs `payload-check` for unresolved template markers and a
+declared byte budget. Child descriptions keep unit-specific acceptance and safety
+clauses, linking shared parent context instead of repeating it.
+
 ## Resume an interrupted decomposition
 
 Invoke the same parent again:
@@ -155,12 +161,15 @@ writes must be reconciled against the current item state.
 | No valid verification command exists | Accept a non-delegate classification or improve verification before reclassifying. |
 | Capability manifest is malformed | Classification continues on raw scores; repair the manifest through [capability review](update-ai-first-capabilities.md). |
 | Discovered metadata is ignored | Check the parent summary for malformed, conflicting, mismatched, or unapproved claims; review central approval. |
+| An outbound payload fails preflight | Remove unresolved template markers or compact repeated prose. For a large unpublished inline plan, consider an explicit migration to branch-backed plan storage. |
+| Tracker storage behaves unexpectedly | Save a minimal API-shaped capture and reproduce it with the installed helper before another live write. Do not patch the installed runtime. |
 
 Source: [decompose-and-classify/SKILL.md](../skills/decompose-and-classify/SKILL.md).
 
 ## Executable policy checks
 
-Version 0.5.0 requires the installed policy runtime. The skill runs `doctor`, parses
+The installed policy runtime provides `payload-check` in addition to the workflow
+commands below. The skill runs `doctor`, parses
 persisted blocks with `decode`, checks current approval with `check-brief`, and uses
 `adjust-scores`, `classify`, and `reclassify` for derived decisions. Resuming a plan
 uses `select-plan`, `unit-key`, and `reconcile`. Human judgments and authenticated

@@ -13,6 +13,7 @@ from .classification import classify
 from .decomposition import reconcile, select_plan, unit_key
 from .installation import doctor, read_json, record_installation
 from .inventory import refresh_inventory
+from .payloads import preflight_payload
 from .schema import decode, encode
 from .workflow import intake, reclassify, select_mode
 
@@ -93,6 +94,8 @@ def dispatch(command, value):
         return dict(operations=tag_patch(**value))
     if command == 'inventory':
         return refresh_inventory(**value)
+    if command == 'payload-check':
+        return preflight_payload(**value)
     raise ValueError('Unknown operation')
 
 
@@ -109,7 +112,8 @@ def main(argv=None):
     receipt.add_argument('--tracker', required=True, choices=('github', 'ado', 'linear'))
     for operation in ('decode', 'encode', 'classify', 'mode', 'intake', 'digest', 'approval', 'snapshot', 'check-brief',
                       'reclassify', 'adjust-scores', 'promotion', 'select-plan',
-                      'unit-key', 'reconcile', 'adapter-check', 'history', 'tag-patch', 'inventory'):
+                      'unit-key', 'reconcile', 'adapter-check', 'history', 'tag-patch', 'inventory',
+                      'payload-check'):
         command = sub.add_parser(operation)
         command.add_argument('input', type=Path, help='UTF-8 JSON file; never an executable command')
     args = parser.parse_args(argv)

@@ -78,6 +78,8 @@ rechecked under that policy before further decomposition.
 
 Read [assets/plan-storage.md](assets/plan-storage.md). Offer tracker comments as the
 default, or a dedicated Git planning branch for larger plans and context bundles.
+Recommend the branch backend when the team expects plans above five units, repeated
+shared context, or tracker/tool response-budget pressure.
 Preserve an existing choice on reruns unless the user requests a change. Confirm
 this alongside the other setup choices; do not require branch storage for delegation.
 

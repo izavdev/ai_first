@@ -26,7 +26,7 @@ Use Epic / Issue / Sub-issue for large / regular / small work items.
 1. Let the skill inspect existing configuration, repository references, and available tracker tools.
 2. Confirm the tracker and all three terminology choices. For Azure DevOps, use work item types supported by the project's process template.
 3. Confirm independent approval or solo development and your canonical tracker identity. Review the installation preview. If `.ai-first/` already exists, review differences and decide how to reconcile customized files.
-4. Choose tracker comments (default) or a dedicated Git planning branch. For a branch, confirm the repository, naming/path convention, and durable archive destination/owner. Setup configures the option without creating or pushing branches.
+4. Choose tracker comments (default) or a dedicated Git planning branch. Prefer the branch for plans above five units, repeated shared context, or response-budget pressure. For a branch, confirm the repository, naming/path convention, and durable archive destination/owner. Setup configures the option without creating or pushing branches.
 5. Let the skill write the local contract files.
 6. For GitHub or Linear, review and explicitly approve creation of missing labels when prompted.
 
