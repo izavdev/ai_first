@@ -261,7 +261,9 @@ The plan contains `schema: "ai-first-decomposition/v1"`, canonical `parent`, cur
 
 - `id`: a newly generated canonical UUID, assigned once and reused on every retry;
 - `title` and `body`: complete intended child content, including classification and
-  acceptance criteria, not merely a title from which a later agent must re-plan;
+  acceptance criteria, not merely a title from which a later agent must re-plan.
+  Shared parent requirements may be referenced through a stable accessible link;
+  do not duplicate boilerplate when the link plus unit-specific clauses is complete;
 - `depends_on`: an array of earlier unit IDs, resolved to actual child IDs when linked.
 
 Persist and read back the plan (including any pinned Git reference) before any create request. For this parent revision

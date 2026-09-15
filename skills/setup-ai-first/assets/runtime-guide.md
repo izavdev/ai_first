@@ -66,6 +66,12 @@ facts. The marker is a compatibility declaration, not a cryptographic signature.
 Runtime files and field contracts are versioned together. Team policy belongs in
 the schema, tracker adapter, and capability manifest, not patched Python copies.
 For a custom runtime, maintain a separately reviewed distribution and its tests.
+Before changing anything under `.ai-first/ai_first/`, `.ai-first/policy.py`, or
+`.ai-first/approval.py`, stop: those are protected installed files. Reproduce the
+problem against a saved JSON fixture, change the source distribution and tests, then
+reinstall through setup reconciliation. A live-session workaround may normalize a
+captured transport object before a helper call only when the mapping is explicit,
+reviewed, and preserved as evidence; it must not masquerade as a runtime fix.
 
 ## Commands
 
@@ -94,6 +100,7 @@ promotion, or incomplete inventory returns 1; malformed inputs return 2.
 | `adapter-check` | Actual `tracker`, `server` name/version, `checks`, `concurrency` | Readiness and missing capabilities |
 | `tag-patch` | ADO `revision`, `current` tags string, `add`, `remove` lists | Revision-guarded JSON Patch operations |
 | `inventory` | Fresh complete `listing`, `fetched`, optional `cache`, booleans `inventory_complete`, `strong_revisions` | Missing `fetch_ids`, complete `items`, next `cache` |
+| `payload-check` | Exact outbound `payload`, optional `forbidden` marker list, optional positive `max_bytes` | UTF-8 byte count and `ready`; unresolved markers or a declared size violation return nonzero |
 
 The lower-level `digest` and `approval` commands accept the existing approval helper's
 payload and evaluation arguments. Workflow skills use `snapshot` and `check-brief`
@@ -147,6 +154,12 @@ Independent identity lookup supplies `human_ids`. A user-like API account alone
 does not prove human authorship. Conflicting snapshots, missing timestamps, and
 ambiguous protocol creation order block. Keep capture scope bound to the exact
 tracker item and re-fetch when it changes; the helper does not authenticate captures.
+
+On the first suspicious storage result, save the smallest API-shaped capture that
+reproduces it and run `history`, `decode`, or the relevant helper locally. Test one
+normal and one failing variant before another live write. Do not repeatedly post and
+re-fetch a growing comment thread to discover normalization behavior. Once a mapping
+is established, fetch fresh remote state once to verify the reviewed workaround.
 
 Sources: [GitHub issue comments](https://docs.github.com/en/rest/issues/comments),
 [ADO comments and pagination](https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/comments/get-comments?view=azure-devops-rest-7.1),

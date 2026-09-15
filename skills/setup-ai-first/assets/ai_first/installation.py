@@ -54,7 +54,7 @@ def runtime_errors(root):
                 'ai_first/__init__.py', 'ai_first/version.py', 'ai_first/installation.py', 'ai_first/cli.py',
                 'ai_first/schema.py', 'ai_first/classification.py', 'ai_first/workflow.py',
                 'ai_first/capabilities.py', 'ai_first/decomposition.py', 'ai_first/adapters.py',
-                'ai_first/inventory.py'}
+                'ai_first/inventory.py', 'ai_first/payloads.py'}
     if not isinstance(files, dict) or set(files) != required:
         return ['Runtime file inventory mismatch; rerun setup']
     for name, expected in files.items():

@@ -3,6 +3,10 @@
 Choose during `setup-ai-first`. Tracker comments remain the default and need no
 additional Git workflow. A dedicated planning branch is useful when a feature needs
 several plan/context files or a reviewable history of planning decisions.
+Prefer it when plans are expected to exceed five units, repeat substantial shared
+context, or approach tracker/tool response budgets. Existing projects do not switch
+automatically: compact and preflight an unpublished inline plan first, then explicitly
+review any backend migration.
 
 | Responsibility | Tracker-comment option | Git-branch option |
 |---|---|---|

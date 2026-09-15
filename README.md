@@ -120,6 +120,10 @@ manifest. This prevents an installed skill from declaring itself proven.
 
 ## Installed runtime and compatibility
 
+Version 0.6.1 adds outbound payload preflight and decomposition cost guardrails:
+plans are serialized once, repeated parent context is linked instead of copied, and
+large inline writes are checked for template markers and byte-budget violations.
+
 Version 0.5.0 installs the tested policy runtime with the skills. Rerun setup to
 copy `policy.py`, `ai_first/`, the runtime manifest/guide, and adapter contract;
 reconcile existing customizations and generate the v2 installation receipt. Before
@@ -219,7 +223,7 @@ not plugin versions or approvals. Setup uses the source manifest to write an
 installation receipt with source and final installed hashes, preserving customizations.
 
 The runtime modules under `skills/setup-ai-first/assets/ai_first/` cover classification, capability evidence,
-mode/escalation transitions, decomposition retries, and description parsing. Tests
+mode/escalation transitions, decomposition retries, payload preflight, and description parsing. Tests
 cover all 81 score combinations, approval revisions, verification evidence, and
 tracker-normalized Markdown round trips. They can also run independently without
 third-party packages using `python3 -m unittest discover -s tests -v`.
