@@ -33,6 +33,10 @@ GitHub label changes are additive and subtractive; they do not replace the full 
 
 Read the current labels before enforcing the exactly-one-tier-label invariant.
 
+`gh issue edit` accepts `--body-file`, `--add-label`, and `--remove-label` together in
+one invocation. When a workflow changes a label and the body in the same step, do both
+in a single `gh issue edit` call rather than one call per field.
+
 ## Linked documents
 
 `brief-url:` may point to a versioned repository document, GitHub issue, GitHub discussion, or another stable document URL. Use `inline` when the brief lives in the issue body above the `[ai-first:v1]` block. Prefer a repository path or permalink over copying a document into the issue.

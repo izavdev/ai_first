@@ -124,6 +124,13 @@ only while calculating its first real digest; never present that placeholder for
 At consumption, pass the fresh snapshot and normalized history to `check-brief`.
 Require exit 0 and `valid: true` immediately before each child write.
 
+`snapshot.json` already exists on disk after the first run above; update it in place
+(for example with a small script reading the latest tool result, or a targeted file
+edit) for the post-write re-fetch and verification pass. Do not reconstruct it by
+retyping the fetched title/body into a new shell heredoc or file write - that
+duplicates a multi-thousand-character payload in the transcript for no functional
+reason and is not what this flow calls for.
+
 ## Adapter preflight and history captures
 
 The required checks are listed in `adapter-contract.json`. Record each as

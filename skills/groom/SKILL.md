@@ -67,7 +67,23 @@ Track unresolved judgment calls as **open decisions**. Do not resolve them yours
 ## Output
 
 1. Write the brief into the item's description (or a linked document if the team convention is set), structured as: Destination / Constraints / Touched surfaces / Definition of done / Out of scope / Human-only list / Open decisions.
-2. Confirm the request owner's canonical human tracker identity; do not substitute the item's automation creator. Generate a fresh UUID for `brief-revision` on every grooming, including re-grooming with unchanged text. Append the parent block per schema 2.1 with `approval-protocol: brief-approval/v1`, the verified `requester`, and the real `open-decisions` count. Remove any approval label before changing the brief. Persist the brief, re-fetch its stored representation and any linked brief content, and calculate `brief-digest` with `policy.py snapshot` from the complete persisted body, title, identity, and fetched linked content. Use `policy.py encode` for the validated block; never omit body text when constructing a payload. Write that digest, then re-fetch and verify it still matches. Never invent a digest. If the helper, identity tools, or linked content are unavailable, stop and report the missing prerequisite; do not announce an approval-ready brief.
+2. Confirm the request owner's canonical human tracker identity; do not substitute the item's automation creator. Generate a fresh UUID for `brief-revision` on every grooming, including re-grooming with unchanged text. Append the parent block per schema 2.1 with `approval-protocol: brief-approval/v1`, the verified `requester`, and the real `open-decisions` count. Remove any approval label before changing the brief.
+   Build the complete target description (with a placeholder digest) and the complete
+   target label set before writing anything. When the adapter's write operation accepts
+   multiple fields at once (check `tracker.md`), persist the label removal and the new
+   content in that single write rather than issuing separate writes for the label and
+   the body - most adapters do not need a dedicated call just to drop a label. Re-fetch
+   its stored representation and any linked brief content, and calculate `brief-digest`
+   with `policy.py snapshot` from the complete persisted body, title, identity, and
+   fetched linked content. Use `policy.py encode` for the validated block; never omit
+   body text when constructing a payload. Keep the fetched content in the on-disk file
+   `runtime-guide.md` describes for `snapshot`, and update that same file in place for
+   the digest recomputation and the verification pass below - never retype the
+   persisted body into a shell command or tool call once it is already on disk. Write
+   the real digest in a second, digest-only write, then re-fetch and verify it still
+   matches. Never invent a digest. If the helper, identity tools, or linked content are
+   unavailable, stop and report the missing prerequisite; do not announce an
+   approval-ready brief.
 3. Apply labels `ai-first` and `groomed`.
 4. Show the exact one-line APPROVED record with the computed revision and digest for the human to post after reviewing the persisted snapshot. Explain that both the manual label and this new comment are required on every tracker. Never post the approval record on their behalf. NEVER apply `brief-approved`. Read the schema's project approval policy. In independent mode, post a comment naming the suggested independent approver. In solo mode, name the configured human and explain that they must review and manually self-approve the brief using the tracker's approval mechanism. In both modes, state that decomposition remains blocked until valid approval and zero open decisions; never auto-approve because solo mode is enabled.
 
