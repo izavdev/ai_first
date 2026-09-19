@@ -32,6 +32,12 @@ without disturbing `ai-first` and `groomed`), you MUST:
 Skipping step 1 silently removes every label not in the call. This is a correctness
 requirement, not a style preference.
 
+`save_issue` takes `labels`, `title`, and `description` (and other fields) together in
+one call. When a workflow needs to change a label and the content in the same step
+(for example, grooming removes an approval label while rewriting the brief), compute
+both the full label set and the new content first, then apply them in a single
+`save_issue` call - do not spend a separate call on the label change alone.
+
 ## Linked documents
 
 `brief-url:` points at a Linear document's id or slug. Create/update via `save_document`

@@ -28,6 +28,11 @@ remove the entire tag field. Apply the patch together; on a revision conflict,
 re-read and recompute. Never turn the policy helper's output into a shell command.
 See [the REST update contract](https://learn.microsoft.com/en-us/rest/api/azure/devops/wit/work-items/update?view=azure-devops-rest-7.1).
 
+The same PATCH request accepts operations against `System.Tags` and other fields
+(such as `System.Description`) together. When a workflow changes the tags and the
+description in the same step, include both operations in one PATCH array under the
+one `/rev` test rather than issuing a separate request per field.
+
 ## Linked documents
 
 `brief-url:` points at an ADO wiki page URL, or is set to `inline` when the brief lives in

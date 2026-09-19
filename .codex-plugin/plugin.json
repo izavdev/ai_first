@@ -1,6 +1,6 @@
 {
   "name": "ai-first-delivery",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Poka-yoke skills for grooming, approving, decomposing, and classifying AI-assisted delivery work with project-defined terminology.",
   "author": {
     "name": "Ivan Zavialov",
